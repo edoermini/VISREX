@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block tab %}
+<script>
+    $('#progress').removeClass('active')
+    $('#automations').removeClass('active')
+    
+    $('#statistics').addClass('active')
+</script>
+
+This is the statistics tab
+{% endblock %}
