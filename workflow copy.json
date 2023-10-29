@@ -1,5 +1,6 @@
 {
-    "nodes": {
+    "workflow": {
+        "nodes": {
             "start": {
                 "type":"activity",
                 "name":"Malware sample",
@@ -23,12 +24,7 @@
                 "phase":"extraction",
                 "results":[],
                 "tools": [
-                    "IceSword",
-                    "TDSKiller",
-                    "GMER",
-                    "Malwarebytes Anti-Rootkit",
-                    "Chkrootkit",
-                    "RootkitRevealer"
+                    "IceSword"
                 ]
             },
             "extr_2":{
@@ -186,7 +182,8 @@
                 "tools": [
                     "idapro",
                     "ghidra",
-                    "reverse_engineering_compiler"
+                    "reverse_engineering_compiler",
+                    "loadlib"
                 ]
             },
             "stic_1":{
@@ -221,7 +218,8 @@
                 "results":[],
                 "tools": [
                     "idapro",
-                    "ollydbg"
+                    "ollydbg",
+                    "loadlib"
                 ]
             },
             "dnmc_1":{
@@ -263,7 +261,8 @@
                 "phase":"Import table reconstruction",
                 "results":[],
                 "tools": [
-                    "import_reconstruction"
+                    "import_reconstruction",
+                    "icddumpfix"
                 ]
             },
             "bhvr_0":{
@@ -305,7 +304,8 @@
                     "memoryze",
                     "systracer",
                     "process_hacker",
-                    "autoruns"
+                    "autoruns",
+                    "gdiproc"
                 ]
             },
             "bhvr_4":{
@@ -319,7 +319,8 @@
                     "regshot",
                     "systracer",
                     "process_monitor",
-                    "psfile"
+                    "psfile",
+                    "dirwatch"
                 ]
             },
             "bhvr_5":{
@@ -338,7 +339,9 @@
                     "process_explorer",
                     "systracer",
                     "process_monitor",
-                    "apatedns"
+                    "apatedns",
+                    "sniff_hit",
+                    "mailpot"
                 ]
             }
         },
@@ -395,4 +398,51 @@
             {"source":"bhvr_3", "destination":"bhvr_4", "value":""},
             {"source":"bhvr_4", "destination":"bhvr_5", "value":""}
         ]
+    },
+    "tools": {
+        "icesword": {}, 
+        "pestudio": {}, 
+        "ssdeep": {}, 
+        "idapro": {}, 
+        "bintext": {}, 
+        "pebrowse": {}, 
+        "fileinsight": {}, 
+        "peid": {}, 
+        "die": {}, 
+        "binwalk": {}, 
+        "yara": {}, 
+        "winhex": {}, 
+        "pe_explorer": {}, 
+        "procdump32": {}, 
+        "scylla": {}, 
+        "ghidra": {}, 
+        "reverse_engineering_compiler": {}, 
+        "ollydbg": {}, 
+        "import_reconstruction": {}, 
+        "floatnotmyfault": {}, 
+        "process_monitor": {}, 
+        "process_explorer": {}, 
+        "memoryze": {}, 
+        "systracer": {}, 
+        "process_hacker": {}, 
+        "autoruns": {}, 
+        "spymetool": {}, 
+        "regshot": {}, 
+        "psfile": {}, 
+        "wireshark": {}, 
+        "snort": {}, 
+        "dirwatch": {},
+        "fakedns":{},
+        "finddll":{},
+        "mailpot":{},
+        "sniff_hit":{},
+        "icddumpfix":{},
+        "gdiproc":{},
+        "loadlib":{},
+        "netcat": {}, 
+        "honeyd": {}, 
+        "capturebot": {}, 
+        "apatedns": {}
+    }
 }
+    

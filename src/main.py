@@ -6,75 +6,15 @@
 # )
 
 import sys
-from PyQt5.QtWidgets import QMenu, QSplitter, QTableWidget, QTableWidgetItem, QActionGroup, QStatusBar, QToolBar, QApplication, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QAction
+from PyQt5.QtWidgets import QMenu, QSplitter, QLabel, QActionGroup, QStatusBar, QToolBar, QApplication, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QAction, QTableWidgetItem
 from PyQt5.QtCore import Qt
 import qtawesome as qta
 import json
 import qdarktheme
 
-class ResponsiveTableWidget(QTableWidget):
-    def __init__(self, rows, headers:list[str]):
-        super(ResponsiveTableWidget, self).__init__(rows, len(headers))
-        self.setHorizontalHeaderLabels(headers)
-        self.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
-
-    def resizeEvent(self, event):
-        super(ResponsiveTableWidget, self).resizeEvent(event)
-        self.updateColumnWidths()
-
-    def updateColumnWidths(self):
-        table_width = self.viewport().width()
-        total_column_width = 0
-
-        for col in range(self.columnCount()):
-            total_column_width += self.columnWidth(col)
-
-        for col in range(self.columnCount()):
-            column_width = self.columnWidth(col)
-            new_width = int(column_width / total_column_width * table_width)
-            self.setColumnWidth(col, new_width)
-    
-    def update_table(self, ):
-        
-        # Aggiornare i dati della tabella (ad esempio, dati dal database)
-        # In questo esempio, inseriamo dati di esempio casuali
-        stacked_widget = self.centralWidget().layout().itemAt(0).widget()
-        table_widget = stacked_widget.currentWidget().layout().itemAt(0).widget()
-        
-        for row in range(1, table_widget.rowCount()):
-            for col in range(table_widget.columnCount()):
-                item = QTableWidgetItem(str(row * col))
-                table_widget.setItem(row, col, item)
-
-class JSONResposiveTableWidget(ResponsiveTableWidget):
-    
-    def __init__(self, json_file:str, columns:list[str], headers:list[str]):
-        """A Qt Table widget created from a json file
-
-        Keyword arguments:
-        json_file (str): the path to json file
-        columns (list[str]): for each element of the json 
-        headers (OrderedDict[str, str]): a dict representing the columns of the table;
-        """
-
-        data = {}
-
-        with open(json_file, 'r') as file:
-            data = json.load(file)
-
-        super().__init__(len(data['nodes']), headers)
-
-        # Popolare la tabella con i dati dal JSON
-        for node_id, (_, node_data) in enumerate(data["nodes"].items()):
-            row_position = node_id  # Ottenere la posizione della riga dall'ID del nodo
-            for i, column in enumerate(columns):
-                cell = node_data[column]
-
-                if isinstance(node_data[column], list):
-                    cell = ", ".join(node_data[column])
-
-                self.setItem(row_position, i, QTableWidgetItem(cell))
+from gui.tables import JSONResponsiveTableWidget, ResponsiveTableWidget
+from gui.updaters import ProcessTableUpdater
+from gui.analysis import Analysis
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -89,19 +29,33 @@ class MainWindow(QMainWindow):
         
         progress_page = QWidget()
         progress_page_layout = QVBoxLayout(progress_page)
-        progress_page_layout.addWidget(ResponsiveTableWidget(1, ['Name', 'Phase', 'Tools', 'Status']))
-        splitter.addWidget(progress_page)
+        progress_page_layout.addWidget(QLabel("Analysis process"))
+        self.progress_table = ResponsiveTableWidget(1, ['Name', 'Phase', 'Status'])
+        progress_page_layout.addWidget(self.progress_table)
 
-        suggestions_page = QWidget()
-        suggestions_page_layout = QVBoxLayout(suggestions_page)
-        suggestions_page_layout.addWidget(ResponsiveTableWidget(1, ['Name', 'Phase', 'Tools', 'Suggestions']))
-        splitter.addWidget(suggestions_page)
+        suggestions_splitter = QSplitter(Qt.Horizontal)
+
+        progress_suggestions_page = QWidget()
+        progress_suggestions_page_layout = QVBoxLayout(progress_suggestions_page)
+        progress_suggestions_page_layout.addWidget(QLabel("Progress suggestions"))
+        progress_suggestions_page_layout.addWidget(ResponsiveTableWidget(1, ['Name', 'Phase', 'Tools']))
+
+        tools_suggestions_page = QWidget()
+        tools_suggestions_page_layout = QVBoxLayout(tools_suggestions_page)
+        tools_suggestions_page_layout.addWidget(QLabel("Tools suggestions"))
+        tools_suggestions_page_layout.addWidget(ResponsiveTableWidget(1, ['Tool', 'Nature', 'Desciption', 'Run']))
+
+        suggestions_splitter.addWidget(progress_suggestions_page)
+        suggestions_splitter.addWidget(tools_suggestions_page)
+
+        splitter.addWidget(progress_page)
+        splitter.addWidget(suggestions_splitter)
 
         stacked_widget.addWidget(splitter)
 
         workflow_page = QWidget()
         workflow_page_layout = QVBoxLayout(workflow_page)
-        workflow_page_layout.addWidget(JSONResposiveTableWidget('workflow.json', ['name', 'phase', 'tools'], ['Name', 'Phase', 'Tools', 'Status']))
+        workflow_page_layout.addWidget(JSONResponsiveTableWidget('./gui/analysis/workflow.json', ['name', 'phase'], ['Name', 'Phase', 'Status']))
         stacked_widget.addWidget(workflow_page)
 
         self.setCentralWidget(stacked_widget)
@@ -166,6 +120,28 @@ class MainWindow(QMainWindow):
 
         # Impostare il widget principale come widget centrale della finestra principale
         self.setCentralWidget(main_widget)
+
+        self.analysis = Analysis()
+
+        self.process_table_updater = ProcessTableUpdater(self, self.analysis)
+        self.process_table_updater.start()
+    
+    def update_progress_table(self):
+        self.progress_table.clearContents()
+
+        for row, (_, activity) in enumerate(self.analysis.activities.items()):
+            columns = [activity["name"], activity["phase"], activity["status"]]
+
+            for col, value in enumerate(columns):
+                item = QTableWidgetItem(value)
+                item.setData(Qt.EditRole, value)
+                self.table.setItem(row, col, item)
+
+    def closeEvent(self, event):
+        self.process_table_updater.stop()
+        self.process_table_updater.join()
+        event.accept()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
