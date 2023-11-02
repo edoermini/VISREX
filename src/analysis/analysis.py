@@ -3,13 +3,10 @@ import psutil
 import re
 import time
 
+from .workflow import WORKFLOW
+
 class Analysis:
-    def __init__(self, file=None):
-        
-        self.workflow = {}
-        
-        with open('/home/edoardo/Documents/cybersec/thesis/MASup-GUI/src/gui/analysis/workflow.json', 'r') as workflow_file:
-            self.workflow = json.load(workflow_file)
+    def __init__(self):
         
         self.activities = {}
         self.active_tools = []
@@ -20,9 +17,12 @@ class Analysis:
         pids = psutil.pids()
 
         for pid in pids:
-            process = psutil.Process(pid)
+            try:
+                process = psutil.Process(pid)
+            except psutil.NoSuchProcess:
+                continue
 
-            for tool_name, tool in self.workflow['tools'].items():
+            for tool_name, tool in WORKFLOW['tools'].items():
                 active = re.match(tool['regex'], process.name())
 
                 if active:
@@ -33,7 +33,7 @@ class Analysis:
         
         updated_activities = []
 
-        for node_id, node in self.workflow['workflow']['nodes'].items():
+        for node_id, node in WORKFLOW['workflow']['nodes'].items():
             if any([tool in self.active_tools for tool in node['tools']]):
 
                 updated_activities.append(node_id)

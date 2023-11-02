@@ -1,25 +1,41 @@
-# import eel
-# eel.init('web')
-# eel.start(
-#     'templates/progress.html',
-#     jinja_templates='templates'
-# )
-
 import sys
 from PyQt5.QtWidgets import QMenu, QSplitter, QLabel, QActionGroup, QStatusBar, QToolBar, QApplication, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QAction, QTableWidgetItem
 from PyQt5.QtCore import Qt
 import qtawesome as qta
-import json
 import qdarktheme
 
-from gui.tables import JSONResponsiveTableWidget, ResponsiveTableWidget
-from gui.updaters import ProcessTableUpdater
-from gui.analysis import Analysis
+from gui.tables.responsive_table_widget import ResponsiveTableWidget
+from gui.updaters import ProgressTableUpdater
+from gui.dialogs import ReadProcessMemory
+from gui.flowcharts import GraphvizZoomableFlowchart
+
+from analysis import Analysis
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
+        self.dot_code = """
+        digraph {
+            node [style="rounded,filled", shape="box", fillcolor="lightblue", fontname="Arial"]
+            edge [fontname="Arial"]
+
+            Start [label="Start", shape="ellipse", style="filled", fillcolor="green"]
+            "Your Process" [label="Your Process", shape="box", fillcolor="lightyellow"]
+            "Decision?" [label="Decision?", shape="diamond", fillcolor="lightyellow"]
+            "Second Process" [label="Your Process", shape="box", fillcolor="lightyellow"]
+            "Third Process" [label="Your Process", shape="box", fillcolor="lightyellow"]
+            End [label="End", shape="ellipse", style="filled", fillcolor="red"]
+
+            Start -> "Your Process" -> "Decision?"
+            "Decision?" -> End [label="Yes"]
+            "Decision?" -> "Second Process" [label="No"]
+            "Second Process" -> "Third Process"
+        }"""
+
+        self.initUI()
+
+    def initUI(self):
         self.setWindowTitle("MASup (Malware Analysis Supporter)")
 
         # Creare un widget a pila per le diverse viste
@@ -53,9 +69,11 @@ class MainWindow(QMainWindow):
 
         stacked_widget.addWidget(splitter)
 
+        workflow_view = GraphvizZoomableFlowchart(self.dot_code)
+
         workflow_page = QWidget()
         workflow_page_layout = QVBoxLayout(workflow_page)
-        workflow_page_layout.addWidget(JSONResponsiveTableWidget('./gui/analysis/workflow.json', ['name', 'phase'], ['Name', 'Phase', 'Status']))
+        workflow_page_layout.addWidget(workflow_view)
         stacked_widget.addWidget(workflow_page)
 
         self.setCentralWidget(stacked_widget)
@@ -100,7 +118,7 @@ class MainWindow(QMainWindow):
 
         show_toolbar_action = QAction('Show toolbar', self, checkable=True)
         show_toolbar_action.setChecked(True)
-        show_toolbar_action.triggered.connect(lambda checked: self.toolbar.setVisible(checked))
+        show_toolbar_action.triggered.connect(self.toolbar.setVisible)
         view_menu.addAction(show_toolbar_action)
 
         appearance_submenu = QMenu('Appearance', self)
@@ -110,6 +128,14 @@ class MainWindow(QMainWindow):
         appearance_submenu.addAction(dark_mode_action)
 
         view_menu.addMenu(appearance_submenu)
+
+        analysis_menu = menubar.addMenu('Analysis')
+        process_injection_menu = QMenu('Process injection', self)
+        extract_injected_action = QAction('Read process memory', self, checkable=False)
+        extract_injected_action.triggered.connect(lambda: ReadProcessMemory(self).exec_())
+        process_injection_menu.addAction(extract_injected_action)
+
+        analysis_menu.addMenu(process_injection_menu)
 
         layout = QVBoxLayout()
         layout.addWidget(stacked_widget)
@@ -123,24 +149,32 @@ class MainWindow(QMainWindow):
 
         self.analysis = Analysis()
 
-        self.process_table_updater = ProcessTableUpdater(self, self.analysis)
+        self.process_table_updater = ProgressTableUpdater(self)
         self.process_table_updater.start()
     
     def update_progress_table(self):
-        self.progress_table.clearContents()
+        self.analysis.update_activities()
 
         for row, (_, activity) in enumerate(self.analysis.activities.items()):
-            columns = [activity["name"], activity["phase"], activity["status"]]
+            
+            if row == self.progress_table.rowCount():
+                self.progress_table.insertRow(row)
+
+            columns = [activity["name"], activity["phase"], "active" if activity["active"] else "ended"]
 
             for col, value in enumerate(columns):
                 item = QTableWidgetItem(value)
-                item.setData(Qt.EditRole, value)
-                self.table.setItem(row, col, item)
+                #item.setData(Qt.EditRole, value)
+                self.progress_table.setItem(row, col, item)
 
     def closeEvent(self, event):
         self.process_table_updater.stop()
         self.process_table_updater.join()
         event.accept()
+    
+    def close(self) -> bool:
+        self.tmp_dir.cleanup()
+        return super().close()
 
 
 if __name__ == '__main__':

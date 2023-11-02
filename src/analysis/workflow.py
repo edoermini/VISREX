@@ -1,4 +1,4 @@
-{
+WORKFLOW = {
     "workflow": {
       "nodes": {
         "start": {
@@ -569,7 +569,7 @@
         "regex": "[Ss]\\s{0,1}[Ss]\\s{0,1}[Dd]\\s{0,1}[Ee]\\s{0,1}[Ee]\\s{0,1}[Pp]\\s{0,1}"
       },
       "idapro": {
-        "regex": "[Ii]\\s{0,1}[Dd]\\s{0,1}[Aa]\\s{0,1}[Pp]\\s{0,1}[Rr]\\s{0,1}[Oo]\\s{0,1}"
+        "regex": "[Ii]\\s{0,1}[Dd]\\s{0,1}[Aa]"
       },
       "bintext": {
         "regex": "[Bb]\\s{0,1}[Ii]\\s{0,1}[Nn]\\s{0,1}[Tt]\\s{0,1}[Ee]\\s{0,1}[Xx]\\s{0,1}[Tt]\\s{0,1}"
