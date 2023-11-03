@@ -10,28 +10,13 @@ from gui.dialogs import ReadProcessMemory
 from gui.flowcharts import GraphvizZoomableFlowchart
 
 from analysis import Analysis
+from analysis import Workflow
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        self.dot_code = """
-        digraph {
-            node [style="rounded,filled", shape="box", fillcolor="lightblue", fontname="Arial"]
-            edge [fontname="Arial"]
-
-            Start [label="Start", shape="ellipse", style="filled", fillcolor="green"]
-            "Your Process" [label="Your Process", shape="box", fillcolor="lightyellow"]
-            "Decision?" [label="Decision?", shape="diamond", fillcolor="lightyellow"]
-            "Second Process" [label="Your Process", shape="box", fillcolor="lightyellow"]
-            "Third Process" [label="Your Process", shape="box", fillcolor="lightyellow"]
-            End [label="End", shape="ellipse", style="filled", fillcolor="red"]
-
-            Start -> "Your Process" -> "Decision?"
-            "Decision?" -> End [label="Yes"]
-            "Decision?" -> "Second Process" [label="No"]
-            "Second Process" -> "Third Process"
-        }"""
+        self.workflow = Workflow()
 
         self.initUI()
 
@@ -69,7 +54,7 @@ class MainWindow(QMainWindow):
 
         stacked_widget.addWidget(splitter)
 
-        workflow_view = GraphvizZoomableFlowchart(self.dot_code)
+        workflow_view = GraphvizZoomableFlowchart(self.workflow.dot_code())
 
         workflow_page = QWidget()
         workflow_page_layout = QVBoxLayout(workflow_page)
@@ -147,7 +132,7 @@ class MainWindow(QMainWindow):
         # Impostare il widget principale come widget centrale della finestra principale
         self.setCentralWidget(main_widget)
 
-        self.analysis = Analysis()
+        self.analysis = Analysis(self.workflow)
 
         self.process_table_updater = ProgressTableUpdater(self)
         self.process_table_updater.start()

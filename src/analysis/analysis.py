@@ -3,13 +3,14 @@ import psutil
 import re
 import time
 
-from .workflow import WORKFLOW
+from .workflow import Workflow
 
 class Analysis:
-    def __init__(self):
+    def __init__(self, workflow:Workflow):
         
-        self.activities = {}
-        self.active_tools = []
+        self.workflow = workflow
+        self.activities : dict[str, str] = {}
+        self.active_tools : list[str] = []
     
     def _update_active_tools(self):
         self.active_tools = []
@@ -22,7 +23,7 @@ class Analysis:
             except psutil.NoSuchProcess:
                 continue
 
-            for tool_name, tool in WORKFLOW['tools'].items():
+            for tool_name, tool in self.workflow['tools'].items():
                 active = re.match(tool['regex'], process.name())
 
                 if active:
@@ -33,7 +34,7 @@ class Analysis:
         
         updated_activities = []
 
-        for node_id, node in WORKFLOW['workflow']['nodes'].items():
+        for node_id, node in self.workflow['workflow']['nodes'].items():
             if any([tool in self.active_tools for tool in node['tools']]):
 
                 updated_activities.append(node_id)
