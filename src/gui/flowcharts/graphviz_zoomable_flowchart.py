@@ -4,12 +4,15 @@ from graphviz import Digraph
 import io
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsTextItem, QApplication, QGraphicsPathItem
 from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPolygonF, QPainterPath, QFont
+from PyQt5.QtGui import QPolygonF, QPainterPath, QFont, QColor, QPen
 import xml.etree.ElementTree as ET
 import re
 
+
+from .flowchart_items import FlowchartEllipse, FlowchartPolygon
+
 class GraphvizZoomableFlowchart(QGraphicsView):
-    def __init__(self, dot:Digraph):
+    def __init__(self, dot:Digraph, edges_color:str = None):
         super().__init__()
 
         svg_file = dot.pipe(format='svg')
@@ -28,6 +31,8 @@ class GraphvizZoomableFlowchart(QGraphicsView):
         self.svg = new_svg.read().decode('utf-8')
 
         self.gscene = QGraphicsScene()
+
+        self.edges_color = edges_color
 
         self.draw_scene()
     
@@ -54,6 +59,7 @@ class GraphvizZoomableFlowchart(QGraphicsView):
                 text_x = float(text.get('x'))
                 text_y = float(text.get('y')) + viewbox[3]
                 node_label = QGraphicsTextItem(text.text)
+                node_label.setZValue(1)
                 node_label.setFont(QFont('Arial'))
                 self.gscene.addItem(node_label)
 
@@ -66,7 +72,8 @@ class GraphvizZoomableFlowchart(QGraphicsView):
                 width = float(ellipse.get('rx'))*2
                 height = float(ellipse.get('ry'))*2
 
-                ellipse_item = QGraphicsEllipseItem(x, y, width, height)  # (x, y, width, height)
+                ellipse_item = FlowchartEllipse(x, y, width, height, hex_color=ellipse.get('fill'))  # (x, y, width, height)
+                ellipse_item.setZValue(0)
                 self.gscene.addItem(ellipse_item)
 
                 text_x = (ellipse_item.boundingRect().center().x() - node_label.boundingRect().width() / 2)
@@ -85,7 +92,6 @@ class GraphvizZoomableFlowchart(QGraphicsView):
                     
                     painter_path = QPainterPath()
 
-
                     path_str = path.get('d')
                     commands = re.findall(r'([MC])([^MC]*)', path_str)
 
@@ -101,10 +107,15 @@ class GraphvizZoomableFlowchart(QGraphicsView):
                                 painter_path.cubicTo(*args[i:i+6])
 
                     path_item = QGraphicsPathItem(painter_path)
+                    path_item.setZValue(0)
                     self.gscene.addItem(path_item)
+                    
+                    pen_color = QColor(self.edges_color)  # Red color
+                    path_item.setPen(QPen(pen_color, 1, Qt.SolidLine))
 
-                    polygon = QPolygonF([QPointF(x, y) for x, y in polygon_points])
-                    polygon_item = QGraphicsPolygonItem(polygon)
+                    polygon_figure = QPolygonF([QPointF(x, y) for x, y in polygon_points])
+                    polygon_item = FlowchartPolygon(polygon_figure, hex_color=self.edges_color)
+                    polygon_item.setZValue(0)
                     self.gscene.addItem(polygon_item)
 
                     center_point = painter_path.pointAtPercent(0.5)
@@ -113,8 +124,9 @@ class GraphvizZoomableFlowchart(QGraphicsView):
                     text_y = (center_point.y() - node_label.boundingRect().height() / 2)
                 
                 else:
-                    polygon = QPolygonF([QPointF(x, y) for x, y in polygon_points])
-                    polygon_item = QGraphicsPolygonItem(polygon)
+                    polygon_figure = QPolygonF([QPointF(x, y) for x, y in polygon_points])
+                    polygon_item = FlowchartPolygon(polygon_figure, hex_color=polygon.get('fill'))
+                    polygon_item.setZValue(0)
                     self.gscene.addItem(polygon_item)
 
                     text_x = (polygon_item.boundingRect().center().x() - node_label.boundingRect().width() / 2)
@@ -122,7 +134,6 @@ class GraphvizZoomableFlowchart(QGraphicsView):
 
             if text is not None:
                 node_label.setPos(text_x, text_y)  # Adjust position based on the ellipse
-
     
     def wheelEvent(self, event):
         if event.modifiers() == Qt.ShiftModifier:
@@ -132,3 +143,7 @@ class GraphvizZoomableFlowchart(QGraphicsView):
             self.scale(factor, factor)
         else:
             super().wheelEvent(event)
+    
+    def set_edges_color(self, color):
+        self.edges_color = color
+        self.draw_scene()

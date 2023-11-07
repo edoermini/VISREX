@@ -54,14 +54,14 @@ class MainWindow(QMainWindow):
 
         stacked_widget.addWidget(splitter)
 
-        interactive_workflow_view = GraphvizZoomableFlowchart(self.workflow.dot_code())
+        self.interactive_workflow_view = GraphvizZoomableFlowchart(self.workflow.dot_code(), "#00000")
 
         interactive_workflow_page = QWidget()
         workflow_page_layout = QVBoxLayout(interactive_workflow_page)
-        workflow_page_layout.addWidget(interactive_workflow_view)
+        workflow_page_layout.addWidget(self.interactive_workflow_view)
         stacked_widget.addWidget(interactive_workflow_page)
 
-        interactive_workflow_view = GraphvizZoomableFlowchart(self.workflow.dot_code())
+        interactive_workflow_view = GraphvizZoomableFlowchart(self.workflow.dot_code(), "#ffffff")
 
         interactive_workflow_page = QWidget()
         workflow_page_layout = QVBoxLayout(interactive_workflow_page)
@@ -123,7 +123,7 @@ class MainWindow(QMainWindow):
         appearance_submenu = QMenu('Appearance', self)
         dark_mode_action = QAction('Dark mode', self, checkable=True)
         dark_mode_action.setChecked(False)
-        dark_mode_action.triggered.connect(lambda checked : qdarktheme.setup_theme('dark' if checked else 'light'))
+        dark_mode_action.triggered.connect(self.dark_mode)
         appearance_submenu.addAction(dark_mode_action)
 
         view_menu.addMenu(appearance_submenu)
@@ -171,6 +171,14 @@ class MainWindow(QMainWindow):
         self.process_table_updater.join()
         event.accept()
     
+    def dark_mode(self, active):
+        if active:
+            qdarktheme.setup_theme('dark')
+            self.interactive_workflow_view.set_edges_color("#ffffff")
+        else:
+            qdarktheme.setup_theme('light')
+            self.interactive_workflow_view.set_edges_color("#000000")
+
     def close(self) -> bool:
         self.tmp_dir.cleanup()
         return super().close()
