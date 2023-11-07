@@ -25,6 +25,9 @@ class FlowchartPolygon(QGraphicsPolygonItem):
 
         color = QColor(hex_color)
 
+        self.set_color(color)
+    
+    def set_color(self, color : QColor):
         self.setBrush(QBrush(color))
         self.setPen(QPen(QBrush(color), 1, Qt.SolidLine))
 
