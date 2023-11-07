@@ -64,11 +64,14 @@ class GraphvizZoomableFlowchart(QGraphicsView):
         self._draw_decision_nodes(decision_nodes)
     
     def wheelEvent(self, event):
-        if event.modifiers() == Qt.ShiftModifier:
-            factor = 1.2
+        factor = 1.1
+        if event.modifiers() == Qt.ControlModifier:
             if event.angleDelta().y() < 0:
                 factor = 1.0 / factor
             self.scale(factor, factor)
+        elif event.modifiers() == Qt.ShiftModifier:
+            delta = event.angleDelta().y()
+            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() + int(delta))
         else:
             super().wheelEvent(event)
     
@@ -134,7 +137,7 @@ class GraphvizZoomableFlowchart(QGraphicsView):
             if text is not None:
                 node_label = QGraphicsTextItem(text.text)
                 node_label.setZValue(1)
-                node_label.setFont(QFont('Arial', pointSize=self.font_size))
+                node_label.setFont(QFont('Arial', pointSize=int(float(text.get('font-size')))-5))
                 node_label.setDefaultTextColor(QColor(self.edges_color))
 
                 self.gscene.addItem(node_label)
@@ -171,7 +174,7 @@ class GraphvizZoomableFlowchart(QGraphicsView):
                 node_label = QGraphicsTextItem(text.text)
                 node_label.setZValue(1)
 
-                node_label.setFont(QFont('Arial', pointSize=self.font_size))
+                node_label.setFont(QFont('Arial', pointSize=int(float(text.get('font-size')))-5))
                 
                 node_label.setDefaultTextColor(self._get_node_text_color(background_color))
 
@@ -207,7 +210,7 @@ class GraphvizZoomableFlowchart(QGraphicsView):
                 node_label = QGraphicsTextItem(text.text)
                 node_label.setZValue(1)
                 
-                node_label.setFont(QFont('Arial', pointSize=self.font_size))
+                node_label.setFont(QFont('Arial', pointSize=int(float(text.get('font-size')))-5))
 
                 node_label.setDefaultTextColor(self._get_node_text_color(background_color))
                 self.gscene.addItem(node_label)
