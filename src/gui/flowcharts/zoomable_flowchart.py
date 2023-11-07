@@ -1,8 +1,9 @@
 import sys
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView
-from PyQt5.QtSvg import QGraphicsSvgItem
+from PyQt5.QtSvg import QGraphicsSvgItem, QSvgRenderer
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter  
+import io
 
 class ZoomableFlowchart(QGraphicsView):
     def __init__(self, svg_file):
@@ -10,8 +11,11 @@ class ZoomableFlowchart(QGraphicsView):
 
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
+        
+        svg_renderer = QSvgRenderer(svg_file.read())
 
-        self.svg_item = QGraphicsSvgItem(svg_file)
+        self.svg_item = QGraphicsSvgItem()
+        self.svg_item.setSharedRenderer(svg_renderer)
         self.scene.addItem(self.svg_item)
 
         self.setRenderHint(QPainter.Antialiasing, True)

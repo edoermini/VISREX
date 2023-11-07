@@ -54,12 +54,19 @@ class MainWindow(QMainWindow):
 
         stacked_widget.addWidget(splitter)
 
-        workflow_view = GraphvizZoomableFlowchart(self.workflow.dot_code())
+        interactive_workflow_view = GraphvizZoomableFlowchart(self.workflow.dot_code())
 
-        workflow_page = QWidget()
-        workflow_page_layout = QVBoxLayout(workflow_page)
-        workflow_page_layout.addWidget(workflow_view)
-        stacked_widget.addWidget(workflow_page)
+        interactive_workflow_page = QWidget()
+        workflow_page_layout = QVBoxLayout(interactive_workflow_page)
+        workflow_page_layout.addWidget(interactive_workflow_view)
+        stacked_widget.addWidget(interactive_workflow_page)
+
+        interactive_workflow_view = GraphvizZoomableFlowchart(self.workflow.dot_code())
+
+        interactive_workflow_page = QWidget()
+        workflow_page_layout = QVBoxLayout(interactive_workflow_page)
+        workflow_page_layout.addWidget(interactive_workflow_view)
+        stacked_widget.addWidget(interactive_workflow_page)
 
         self.setCentralWidget(stacked_widget)
 
@@ -85,6 +92,13 @@ class MainWindow(QMainWindow):
         suggestions_button.setCheckable(True)
         toolbar_actions.addAction(suggestions_button)
         self.toolbar.addAction(suggestions_button)
+
+        interactive_flow_button = QAction(qta.icon('fa5s.stream'), "Flow", self)
+        interactive_flow_button.setStatusTip("Analysis' suggestions")
+        interactive_flow_button.triggered.connect(lambda: stacked_widget.setCurrentIndex(2))
+        interactive_flow_button.setCheckable(True)
+        toolbar_actions.addAction(interactive_flow_button)
+        self.toolbar.addAction(interactive_flow_button)
 
         self.toolbar.addSeparator()
 

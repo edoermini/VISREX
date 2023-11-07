@@ -1,6 +1,7 @@
 import json
 from typing import TextIO
 from io import IOBase
+from graphviz import Digraph
 
 class Workflow:
 	def __init__(self, workflow:dict[str,str]|TextIO = None):
@@ -789,20 +790,15 @@ class Workflow:
 		return repr(self.__dict__)
 	
 	def dot_code(self):
-		dot_code = [
-
-			'node [style="rounded,filled", shape="box", fillcolor="lightblue", fontname="Arial"]',
-			'edge [fontname="Arial"]'
-		]
+		dot = Digraph(comment="Malware Analysis Flowchart")
+		dot.attr('node', style="rounded,filled", shape="box", fillcolor="lightblue", fontname="Arial")
+		dot.attr('edge', fontname="Arial")
 
 		for node_id, node in self.__dict__['workflow']['nodes'].items():
-			dot_code.append(f'"{node_id}" [label="{node["name"]}", shape="{"ellipse" if node["type"] == "activity" else "diamond"}", style="filled", fillcolor="{node["color"]}"]')
+			dot.node(node_id, node["name"], shape="ellipse" if node["type"] == "activity" else "diamond", style="filled", fillcolor=node["color"])
 	  
 		for edge in self.__dict__['workflow']['edges']:
-			dot_code.append(f'"{edge["source"]}" -> "{edge["destination"]}" [label="{edge["value"]}"]')
+			dot.edge(edge["source"],edge["destination"], label=edge["value"])
 		
-		diagraph = '\n'.join(dot_code)
-
-		print(f"digraph {{ \n {diagraph} \n }}")
-		return f"digraph {{ \n {diagraph} \n }}"
+		return dot
 	  
