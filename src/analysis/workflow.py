@@ -35,7 +35,7 @@ class Workflow:
 				"color": "#4051B5",
 				"results": [],
 				"tools": [
-				  "IceSword"
+				  "icesword"
 				]
 			  },
 			  "extr_2": {
@@ -138,7 +138,7 @@ class Workflow:
 				"tools": [
 				  "pebrowse",
 				  "winhex",
-				  "pe_explorer",
+				  "peexplorer",
 				  "procdump32"
 				]
 			  },
@@ -209,7 +209,7 @@ class Workflow:
 				"tools": [
 				  "idapro",
 				  "ghidra",
-				  "reverse_engineering_compiler",
+				  "reverseengineeringcompiler",
 				  "loadlib"
 				]
 			  },
@@ -297,7 +297,7 @@ class Workflow:
 				"color":"#9C27B0",
 				"results": [],
 				"tools": [
-				  "import_reconstruction",
+				  "importreconstruction",
 				  "icddumpfix"
 				]
 			  },
@@ -339,11 +339,11 @@ class Workflow:
 				"results": [],
 				"tools": [
 				  "floatnotmyfault",
-				  "process_monitor",
-				  "process_explorer",
+				  "processmonitor",
+				  "processexplorer",
 				  "memoryze",
 				  "systracer",
-				  "process_hacker",
+				  "processhacker",
 				  "autoruns",
 				  "gdiproc"
 				]
@@ -374,15 +374,15 @@ class Workflow:
 				"tools": [
 				  "wireshark",
 				  "snort",
-				  "malcode_analyst_pack",
+				  "malcodeanalystpack",
 				  "netcat",
 				  "honeyd",
 				  "capturebot",
-				  "process_explorer",
+				  "processexplorer",
 				  "systracer",
-				  "process_monitor",
+				  "processmonitor",
 				  "apatedns",
-				  "sniff_hit",
+				  "sniffhit",
 				  "mailpot"
 				]
 			  }
@@ -600,137 +600,137 @@ class Workflow:
 			  }
 			]
 		  },
-		  "tools": {
-			"icesword": {
-			  "regex": "[Ii]\\s{0,1}[Cc]\\s{0,1}[Ee]\\s{0,1}[Ss]\\s{0,1}[Ww]\\s{0,1}[Oo]\\s{0,1}[Rr]\\s{0,1}[Dd]\\s{0,1}"
-			},
-			"pestudio": {
-			  "regex": "[Pp]\\s{0,1}[Ee]\\s{0,1}[Ss]\\s{0,1}[Tt]\\s{0,1}[Uu]\\s{0,1}[Dd]\\s{0,1}[Ii]\\s{0,1}[Oo]\\s{0,1}"
-			},
-			"ssdeep": {
-			  "regex": "[Ss]\\s{0,1}[Ss]\\s{0,1}[Dd]\\s{0,1}[Ee]\\s{0,1}[Ee]\\s{0,1}[Pp]\\s{0,1}"
-			},
-			"idapro": {
-			  "regex": "[Ii]\\s{0,1}[Dd]\\s{0,1}[Aa]"
-			},
-			"bintext": {
-			  "regex": "[Bb]\\s{0,1}[Ii]\\s{0,1}[Nn]\\s{0,1}[Tt]\\s{0,1}[Ee]\\s{0,1}[Xx]\\s{0,1}[Tt]\\s{0,1}"
-			},
-			"pebrowse": {
-			  "regex": "[Pp]\\s{0,1}[Ee]\\s{0,1}[Bb]\\s{0,1}[Rr]\\s{0,1}[Oo]\\s{0,1}[Ww]\\s{0,1}[Ss]\\s{0,1}[Ee]\\s{0,1}"
-			},
-			"fileinsight": {
-			  "regex": "[Ff]\\s{0,1}[Ii]\\s{0,1}[Ll]\\s{0,1}[Ee]\\s{0,1}[Ii]\\s{0,1}[Nn]\\s{0,1}[Ss]\\s{0,1}[Ii]\\s{0,1}[Gg]\\s{0,1}[Hh]\\s{0,1}[Tt]\\s{0,1}"
-			},
-			"peid": {
-			  "regex": "[Pp]\\s{0,1}[Ee]\\s{0,1}[Ii]\\s{0,1}[Dd]\\s{0,1}"
-			},
-			"die": {
-			  "regex": "[Dd]\\s{0,1}[Ii]\\s{0,1}[Ee]\\s{0,1}"
-			},
-			"binwalk": {
-			  "regex": "[Bb]\\s{0,1}[Ii]\\s{0,1}[Nn]\\s{0,1}[Ww]\\s{0,1}[Aa]\\s{0,1}[Ll]\\s{0,1}[Kk]\\s{0,1}"
-			},
-			"yara": {
-			  "regex": "[Yy]\\s{0,1}[Aa]\\s{0,1}[Rr]\\s{0,1}[Aa]\\s{0,1}"
-			},
-			"winhex": {
-			  "regex": "[Ww]\\s{0,1}[Ii]\\s{0,1}[Nn]\\s{0,1}[Hh]\\s{0,1}[Ee]\\s{0,1}[Xx]\\s{0,1}"
-			},
-			"pe_explorer": {
-			  "regex": "[Pp]\\s{0,1}[Ee]\\s{0,1}[__]\\s{0,1}[Ee]\\s{0,1}[Xx]\\s{0,1}[Pp]\\s{0,1}[Ll]\\s{0,1}[Oo]\\s{0,1}[Rr]\\s{0,1}[Ee]\\s{0,1}[Rr]\\s{0,1}"
-			},
-			"procdump32": {
-			  "regex": "[Pp]\\s{0,1}[Rr]\\s{0,1}[Oo]\\s{0,1}[Cc]\\s{0,1}[Dd]\\s{0,1}[Uu]\\s{0,1}[Mm]\\s{0,1}[Pp]\\s{0,1}[33]\\s{0,1}[22]\\s{0,1}"
-			},
-			"scylla": {
-			  "regex": "[Ss]\\s{0,1}[Cc]\\s{0,1}[Yy]\\s{0,1}[Ll]\\s{0,1}[Ll]\\s{0,1}[Aa]\\s{0,1}"
-			},
-			"ghidra": {
-			  "regex": "[Gg]\\s{0,1}[Hh]\\s{0,1}[Ii]\\s{0,1}[Dd]\\s{0,1}[Rr]\\s{0,1}[Aa]\\s{0,1}"
-			},
-			"reverse_engineering_compiler": {
-			  "regex": "[Rr]\\s{0,1}[Ee]\\s{0,1}[Vv]\\s{0,1}[Ee]\\s{0,1}[Rr]\\s{0,1}[Ss]\\s{0,1}[Ee]\\s{0,1}[__]\\s{0,1}[Ee]\\s{0,1}[Nn]\\s{0,1}[Gg]\\s{0,1}[Ii]\\s{0,1}[Nn]\\s{0,1}[Ee]\\s{0,1}[Ee]\\s{0,1}[Rr]\\s{0,1}[Ii]\\s{0,1}[Nn]\\s{0,1}[Gg]\\s{0,1}[__]\\s{0,1}[Cc]\\s{0,1}[Oo]\\s{0,1}[Mm]\\s{0,1}[Pp]\\s{0,1}[Ii]\\s{0,1}[Ll]\\s{0,1}[Ee]\\s{0,1}[Rr]\\s{0,1}"
-			},
-			"ollydbg": {
-			  "regex": "[Oo]\\s{0,1}[Ll]\\s{0,1}[Ll]\\s{0,1}[Yy]\\s{0,1}[Dd]\\s{0,1}[Bb]\\s{0,1}[Gg]\\s{0,1}"
-			},
-			"import_reconstruction": {
-			  "regex": "[Ii]\\s{0,1}[Mm]\\s{0,1}[Pp]\\s{0,1}[Oo]\\s{0,1}[Rr]\\s{0,1}[Tt]\\s{0,1}[__]\\s{0,1}[Rr]\\s{0,1}[Ee]\\s{0,1}[Cc]\\s{0,1}[Oo]\\s{0,1}[Nn]\\s{0,1}[Ss]\\s{0,1}[Tt]\\s{0,1}[Rr]\\s{0,1}[Uu]\\s{0,1}[Cc]\\s{0,1}[Tt]\\s{0,1}[Ii]\\s{0,1}[Oo]\\s{0,1}[Nn]\\s{0,1}"
-			},
-			"floatnotmyfault": {
-			  "regex": "[Ff]\\s{0,1}[Ll]\\s{0,1}[Oo]\\s{0,1}[Aa]\\s{0,1}[Tt]\\s{0,1}[Nn]\\s{0,1}[Oo]\\s{0,1}[Tt]\\s{0,1}[Mm]\\s{0,1}[Yy]\\s{0,1}[Ff]\\s{0,1}[Aa]\\s{0,1}[Uu]\\s{0,1}[Ll]\\s{0,1}[Tt]\\s{0,1}"
-			},
-			"process_monitor": {
-			  "regex": "[Pp]\\s{0,1}[Rr]\\s{0,1}[Oo]\\s{0,1}[Cc]\\s{0,1}[Ee]\\s{0,1}[Ss]\\s{0,1}[Ss]\\s{0,1}[__]\\s{0,1}[Mm]\\s{0,1}[Oo]\\s{0,1}[Nn]\\s{0,1}[Ii]\\s{0,1}[Tt]\\s{0,1}[Oo]\\s{0,1}[Rr]\\s{0,1}"
-			},
-			"process_explorer": {
-			  "regex": "[Pp]\\s{0,1}[Rr]\\s{0,1}[Oo]\\s{0,1}[Cc]\\s{0,1}[Ee]\\s{0,1}[Ss]\\s{0,1}[Ss]\\s{0,1}[__]\\s{0,1}[Ee]\\s{0,1}[Xx]\\s{0,1}[Pp]\\s{0,1}[Ll]\\s{0,1}[Oo]\\s{0,1}[Rr]\\s{0,1}[Ee]\\s{0,1}[Rr]\\s{0,1}"
-			},
-			"memoryze": {
-			  "regex": "[Mm]\\s{0,1}[Ee]\\s{0,1}[Mm]\\s{0,1}[Oo]\\s{0,1}[Rr]\\s{0,1}[Yy]\\s{0,1}[Zz]\\s{0,1}[Ee]\\s{0,1}"
-			},
-			"systracer": {
-			  "regex": "[Ss]\\s{0,1}[Yy]\\s{0,1}[Ss]\\s{0,1}[Tt]\\s{0,1}[Rr]\\s{0,1}[Aa]\\s{0,1}[Cc]\\s{0,1}[Ee]\\s{0,1}[Rr]\\s{0,1}"
-			},
-			"process_hacker": {
-			  "regex": "[Pp]\\s{0,1}[Rr]\\s{0,1}[Oo]\\s{0,1}[Cc]\\s{0,1}[Ee]\\s{0,1}[Ss]\\s{0,1}[Ss]\\s{0,1}[__]\\s{0,1}[Hh]\\s{0,1}[Aa]\\s{0,1}[Cc]\\s{0,1}[Kk]\\s{0,1}[Ee]\\s{0,1}[Rr]\\s{0,1}"
-			},
-			"autoruns": {
-			  "regex": "[Aa]\\s{0,1}[Uu]\\s{0,1}[Tt]\\s{0,1}[Oo]\\s{0,1}[Rr]\\s{0,1}[Uu]\\s{0,1}[Nn]\\s{0,1}[Ss]\\s{0,1}"
-			},
-			"spymetool": {
-			  "regex": "[Ss]\\s{0,1}[Pp]\\s{0,1}[Yy]\\s{0,1}[Mm]\\s{0,1}[Ee]\\s{0,1}[Tt]\\s{0,1}[Oo]\\s{0,1}[Oo]\\s{0,1}[Ll]\\s{0,1}"
-			},
-			"regshot": {
-			  "regex": "[Rr]\\s{0,1}[Ee]\\s{0,1}[Gg]\\s{0,1}[Ss]\\s{0,1}[Hh]\\s{0,1}[Oo]\\s{0,1}[Tt]\\s{0,1}"
-			},
-			"psfile": {
-			  "regex": "[Pp]\\s{0,1}[Ss]\\s{0,1}[Ff]\\s{0,1}[Ii]\\s{0,1}[Ll]\\s{0,1}[Ee]\\s{0,1}"
-			},
-			"wireshark": {
-			  "regex": "[Ww]\\s{0,1}[Ii]\\s{0,1}[Rr]\\s{0,1}[Ee]\\s{0,1}[Ss]\\s{0,1}[Hh]\\s{0,1}[Aa]\\s{0,1}[Rr]\\s{0,1}[Kk]\\s{0,1}"
-			},
-			"snort": {
-			  "regex": "[Ss]\\s{0,1}[Nn]\\s{0,1}[Oo]\\s{0,1}[Rr]\\s{0,1}[Tt]\\s{0,1}"
-			},
-			"dirwatch": {
-			  "regex": "[Dd]\\s{0,1}[Ii]\\s{0,1}[Rr]\\s{0,1}[Ww]\\s{0,1}[Aa]\\s{0,1}[Tt]\\s{0,1}[Cc]\\s{0,1}[Hh]\\s{0,1}"
-			},
-			"fakedns": {
-			  "regex": "[Ff]\\s{0,1}[Aa]\\s{0,1}[Kk]\\s{0,1}[Ee]\\s{0,1}[Dd]\\s{0,1}[Nn]\\s{0,1}[Ss]\\s{0,1}"
-			},
-			"finddll": {
-			  "regex": "[Ff]\\s{0,1}[Ii]\\s{0,1}[Nn]\\s{0,1}[Dd]\\s{0,1}[Dd]\\s{0,1}[Ll]\\s{0,1}[Ll]\\s{0,1}"
-			},
-			"mailpot": {
-			  "regex": "[Mm]\\s{0,1}[Aa]\\s{0,1}[Ii]\\s{0,1}[Ll]\\s{0,1}[Pp]\\s{0,1}[Oo]\\s{0,1}[Tt]\\s{0,1}"
-			},
-			"sniff_hit": {
-			  "regex": "[Ss]\\s{0,1}[Nn]\\s{0,1}[Ii]\\s{0,1}[Ff]\\s{0,1}[Ff]\\s{0,1}[__]\\s{0,1}[Hh]\\s{0,1}[Ii]\\s{0,1}[Tt]\\s{0,1}"
-			},
-			"icddumpfix": {
-			  "regex": "[Ii]\\s{0,1}[Cc]\\s{0,1}[Dd]\\s{0,1}[Dd]\\s{0,1}[Uu]\\s{0,1}[Mm]\\s{0,1}[Pp]\\s{0,1}[Ff]\\s{0,1}[Ii]\\s{0,1}[Xx]\\s{0,1}"
-			},
-			"gdiproc": {
-			  "regex": "[Gg]\\s{0,1}[Dd]\\s{0,1}[Ii]\\s{0,1}[Pp]\\s{0,1}[Rr]\\s{0,1}[Oo]\\s{0,1}[Cc]\\s{0,1}"
-			},
-			"loadlib": {
-			  "regex": "[Ll]\\s{0,1}[Oo]\\s{0,1}[Aa]\\s{0,1}[Dd]\\s{0,1}[Ll]\\s{0,1}[Ii]\\s{0,1}[Bb]\\s{0,1}"
-			},
-			"netcat": {
-			  "regex": "[Nn]\\s{0,1}[Ee]\\s{0,1}[Tt]\\s{0,1}[Cc]\\s{0,1}[Aa]\\s{0,1}[Tt]\\s{0,1}"
-			},
-			"honeyd": {
-			  "regex": "[Hh]\\s{0,1}[Oo]\\s{0,1}[Nn]\\s{0,1}[Ee]\\s{0,1}[Yy]\\s{0,1}[Dd]\\s{0,1}"
-			},
-			"capturebot": {
-			  "regex": "[Cc]\\s{0,1}[Aa]\\s{0,1}[Pp]\\s{0,1}[Tt]\\s{0,1}[Uu]\\s{0,1}[Rr]\\s{0,1}[Ee]\\s{0,1}[Bb]\\s{0,1}[Oo]\\s{0,1}[Tt]\\s{0,1}"
-			},
-			"apatedns": {
-			  "regex": "[Aa]\\s{0,1}[Pp]\\s{0,1}[Aa]\\s{0,1}[Tt]\\s{0,1}[Ee]\\s{0,1}[Dd]\\s{0,1}[Nn]\\s{0,1}[Ss]\\s{0,1}"
+			"tools": {
+				"icesword": {
+					"regex": "(?i)icesword(?:\\.exe)?"
+				},
+				"pestudio": {
+					"regex": "(?i)pestudio(?:\\.exe)?"
+				},
+				"ssdeep": {
+					"regex": "(?i)ssdeep(?:\\.exe)?"
+				},
+				"idapro": {
+					"regex": "(?i)ida(?:pro)?(?:64)?(?:\\.exe)?"
+				},
+				"bintext": {
+					"regex": "(?i)bintext(?:\\.exe)?"
+				},
+				"pebrowse": {
+					"regex": "(?i)pebrowse(?:\\.exe)?"
+				},
+				"fileinsight": {
+					"regex": "(?i)fileinsight(?:\\.exe)?"
+				},
+				"peid": {
+					"regex": "(?i)peid(?:\\.exe)?"
+				},
+				"die": {
+					"regex": "(?i)die(?:\\.exe)?"
+				},
+				"binwalk": {
+					"regex": "(?i)binwalk(?:\\.exe)?"
+				},
+				"yara": {
+					"regex": "(?i)yara(?:\\.exe)?"
+				},
+				"winhex": {
+					"regex": "(?i)winhex(?:\\.exe)?"
+				},
+				"peexplorer": {
+					"regex": "(?i)peexplorer(?:\\.exe)?"
+				},
+				"procdump32": {
+					"regex": "(?i)procdump32(?:\\.exe)?"
+				},
+				"scylla": {
+					"regex": "(?i)scylla(?:\\.exe)?"
+				},
+				"ghidra": {
+					"regex": "(?i)ghidra(?:\\.exe)?"
+				},
+				"reverseengineeringcompiler": {
+					"regex": "(?i)reverseengineeringcompiler(?:\\.exe)?"
+				},
+				"ollydbg": {
+					"regex": "(?i)ollydbg(?:\\.exe)?"
+				},
+				"importreconstruction": {
+					"regex": "(?i)importreconstruction(?:\\.exe)?"
+				},
+				"floatnotmyfault": {
+					"regex": "(?i)floatnotmyfault(?:\\.exe)?"
+				},
+				"processmonitor": {
+					"regex": "(?i)proc(?:ess)?mon(?:itor)?(?:32|64)?(?:\\.exe)?"
+				},
+				"processexplorer": {
+					"regex": "(?i)processexplorer(?:\\.exe)?"
+				},
+				"memoryze": {
+					"regex": "(?i)memoryze(?:\\.exe)?"
+				},
+				"systracer": {
+					"regex": "(?i)systracer(?:\\.exe)?"
+				},
+				"processhacker": {
+					"regex": "(?i)processhacker(?:\\.exe)?"
+				},
+				"autoruns": {
+					"regex": "(?i)autoruns(?:\\.exe)?"
+				},
+				"spymetool": {
+					"regex": "(?i)spymetool(?:\\.exe)?"
+				},
+				"regshot": {
+					"regex": "(?i)regshot(?:\\.exe)?"
+				},
+				"psfile": {
+					"regex": "(?i)psfile(?:\\.exe)?"
+				},
+				"wireshark": {
+					"regex": "(?i)wireshark(?:\\.exe)?"
+				},
+				"snort": {
+					"regex": "(?i)snort(?:\\.exe)?"
+				},
+				"dirwatch": {
+					"regex": "(?i)dirwatch(?:\\.exe)?"
+				},
+				"fakedns": {
+					"regex": "(?i)fakedns(?:\\.exe)?"
+				},
+				"finddll": {
+					"regex": "(?i)finddll(?:\\.exe)?"
+				},
+				"mailpot": {
+					"regex": "(?i)mailpot(?:\\.exe)?"
+				},
+				"sniffhit": {
+					"regex": "(?i)sniffhit(?:\\.exe)?"
+				},
+				"icddumpfix": {
+					"regex": "(?i)icddumpfix(?:\\.exe)?"
+				},
+				"gdiproc": {
+					"regex": "(?i)gdiproc(?:\\.exe)?"
+				},
+				"loadlib": {
+					"regex": "(?i)loadlib(?:\\.exe)?"
+				},
+				"netcat": {
+					"regex": "(?i)netcat(?:\\.exe)?"
+				},
+				"honeyd": {
+					"regex": "(?i)honeyd(?:\\.exe)?"
+				},
+				"capturebot": {
+					"regex": "(?i)capturebot(?:\\.exe)?"
+				},
+				"apatedns": {
+					"regex": "(?i)apatedns(?:\\.exe)?"
+				}
 			}
-		  }
 		}
 
 		if isinstance(workflow, IOBase):

@@ -32,11 +32,11 @@ class GraphvizZoomableFlowchart(QGraphicsView):
 
         self.gscene = QGraphicsScene()
 
+        self.font_size = 6
         self.edges_color = edges_color
 
         self.edges : list[tuple[QGraphicsPathItem, FlowchartPolygon]] = [] # edges are made by a line and an arrow
-        self.decision_nodes : list[FlowchartPolygon] = []
-        self.ndoes : list[FlowchartEllipse] = []
+        self.nodes : dict[str,FlowchartEllipse | FlowchartPolygon] = {}
         self.edges_labels : list[QGraphicsTextItem] = []
 
         self.viewbox : list[float] = [] # [min_x, min_y, width, height]
@@ -134,7 +134,7 @@ class GraphvizZoomableFlowchart(QGraphicsView):
             if text is not None:
                 node_label = QGraphicsTextItem(text.text)
                 node_label.setZValue(1)
-                node_label.setFont(QFont('Arial'))
+                node_label.setFont(QFont('Arial', pointSize=self.font_size))
                 node_label.setDefaultTextColor(QColor(self.edges_color))
 
                 self.gscene.addItem(node_label)
@@ -152,6 +152,7 @@ class GraphvizZoomableFlowchart(QGraphicsView):
             
             polygon = decision_node.find('.//{http://www.w3.org/2000/svg}polygon')
             text = decision_node.find('.//{http://www.w3.org/2000/svg}text')
+            title = decision_node.find('.//{http://www.w3.org/2000/svg}title')
 
             background_color = polygon.get('fill')
 
@@ -164,12 +165,14 @@ class GraphvizZoomableFlowchart(QGraphicsView):
             polygon_item.setZValue(0)
             self.gscene.addItem(polygon_item)
 
-            self.decision_nodes.append(polygon_item)
+            self.nodes[title.text] = polygon_item
 
             if text is not None:
                 node_label = QGraphicsTextItem(text.text)
                 node_label.setZValue(1)
-                node_label.setFont(QFont('Arial'))
+
+                node_label.setFont(QFont('Arial', pointSize=self.font_size))
+                
                 node_label.setDefaultTextColor(self._get_node_text_color(background_color))
 
                 self.gscene.addItem(node_label)
@@ -185,6 +188,7 @@ class GraphvizZoomableFlowchart(QGraphicsView):
 
             ellipse = node.find('.//{http://www.w3.org/2000/svg}ellipse')
             text = node.find('.//{http://www.w3.org/2000/svg}text')
+            title = node.find('.//{http://www.w3.org/2000/svg}title')
 
             background_color = ellipse.get('fill')
 
@@ -197,12 +201,14 @@ class GraphvizZoomableFlowchart(QGraphicsView):
             ellipse_item.setZValue(0)
             self.gscene.addItem(ellipse_item)
 
-            self.ndoes.append(ellipse_item)
+            self.nodes[title.text] = ellipse_item
 
             if text is not None:
                 node_label = QGraphicsTextItem(text.text)
                 node_label.setZValue(1)
-                node_label.setFont(QFont('Arial'))
+                
+                node_label.setFont(QFont('Arial', pointSize=self.font_size))
+
                 node_label.setDefaultTextColor(self._get_node_text_color(background_color))
                 self.gscene.addItem(node_label)
                 
@@ -223,3 +229,11 @@ class GraphvizZoomableFlowchart(QGraphicsView):
             return QColor(Qt.black)
         else:
             return QColor(Qt.white)
+    
+    def set_opacity(self, opacity: float, node_id : str = None):
+        if not node_id:
+            for _, node in self.nodes.items():
+                node.setOpacity(opacity)
+        
+        else:
+            self.nodes[node_id].setOpacity(opacity)

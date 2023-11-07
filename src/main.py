@@ -26,46 +26,12 @@ class MainWindow(QMainWindow):
         # Creare un widget a pila per le diverse viste
         stacked_widget = QStackedWidget()
 
-        splitter = QSplitter(Qt.Vertical)
-        
-        progress_page = QWidget()
-        progress_page_layout = QVBoxLayout(progress_page)
-        progress_page_layout.addWidget(QLabel("Analysis process"))
-        self.progress_table = ResponsiveTableWidget(1, ['Name', 'Phase', 'Status'])
-        progress_page_layout.addWidget(self.progress_table)
-
-        suggestions_splitter = QSplitter(Qt.Horizontal)
-
-        progress_suggestions_page = QWidget()
-        progress_suggestions_page_layout = QVBoxLayout(progress_suggestions_page)
-        progress_suggestions_page_layout.addWidget(QLabel("Progress suggestions"))
-        progress_suggestions_page_layout.addWidget(ResponsiveTableWidget(1, ['Name', 'Phase', 'Tools']))
-
-        tools_suggestions_page = QWidget()
-        tools_suggestions_page_layout = QVBoxLayout(tools_suggestions_page)
-        tools_suggestions_page_layout.addWidget(QLabel("Tools suggestions"))
-        tools_suggestions_page_layout.addWidget(ResponsiveTableWidget(1, ['Tool', 'Nature', 'Desciption', 'Run']))
-
-        suggestions_splitter.addWidget(progress_suggestions_page)
-        suggestions_splitter.addWidget(tools_suggestions_page)
-
-        splitter.addWidget(progress_page)
-        splitter.addWidget(suggestions_splitter)
-
-        stacked_widget.addWidget(splitter)
-
         self.interactive_workflow_view = GraphvizZoomableFlowchart(self.workflow.dot_code(), "#00000")
+        self.interactive_workflow_view.set_opacity(0.2)
 
         interactive_workflow_page = QWidget()
         workflow_page_layout = QVBoxLayout(interactive_workflow_page)
         workflow_page_layout.addWidget(self.interactive_workflow_view)
-        stacked_widget.addWidget(interactive_workflow_page)
-
-        interactive_workflow_view = GraphvizZoomableFlowchart(self.workflow.dot_code(), "#ffffff")
-
-        interactive_workflow_page = QWidget()
-        workflow_page_layout = QVBoxLayout(interactive_workflow_page)
-        workflow_page_layout.addWidget(interactive_workflow_view)
         stacked_widget.addWidget(interactive_workflow_page)
 
         self.setCentralWidget(stacked_widget)
@@ -85,20 +51,6 @@ class MainWindow(QMainWindow):
         progress_button.setChecked(True)
         toolbar_actions.addAction(progress_button)
         self.toolbar.addAction(progress_button)
-
-        suggestions_button = QAction(qta.icon('fa5s.stream'), "Flow", self)
-        suggestions_button.setStatusTip("Analysis' suggestions")
-        suggestions_button.triggered.connect(lambda: stacked_widget.setCurrentIndex(1))
-        suggestions_button.setCheckable(True)
-        toolbar_actions.addAction(suggestions_button)
-        self.toolbar.addAction(suggestions_button)
-
-        interactive_flow_button = QAction(qta.icon('fa5s.stream'), "Flow", self)
-        interactive_flow_button.setStatusTip("Analysis' suggestions")
-        interactive_flow_button.triggered.connect(lambda: stacked_widget.setCurrentIndex(2))
-        interactive_flow_button.setCheckable(True)
-        toolbar_actions.addAction(interactive_flow_button)
-        self.toolbar.addAction(interactive_flow_button)
 
         self.toolbar.addSeparator()
 
@@ -151,20 +103,11 @@ class MainWindow(QMainWindow):
         self.process_table_updater = ProgressTableUpdater(self)
         self.process_table_updater.start()
     
-    def update_progress_table(self):
+    def update_progress(self):
         self.analysis.update_activities()
 
-        for row, (_, activity) in enumerate(self.analysis.activities.items()):
-            
-            if row == self.progress_table.rowCount():
-                self.progress_table.insertRow(row)
-
-            columns = [activity["name"], activity["phase"], "active" if activity["active"] else "ended"]
-
-            for col, value in enumerate(columns):
-                item = QTableWidgetItem(value)
-                #item.setData(Qt.EditRole, value)
-                self.progress_table.setItem(row, col, item)
+        for node_id in self.analysis.activities:
+            self.interactive_workflow_view.set_opacity(1, node_id)
 
     def closeEvent(self, event):
         self.process_table_updater.stop()

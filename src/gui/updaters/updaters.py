@@ -9,7 +9,7 @@ class ProgressTableUpdater(threading.Thread):
 
     def run(self):
         while not self.stop_event.is_set():
-            self.gui.update_progress_table()
+            self.gui.update_progress()
 
             # Sleep for some time before the next update
             self.stop_event.wait(1)  # Sleep for 5 seconds
