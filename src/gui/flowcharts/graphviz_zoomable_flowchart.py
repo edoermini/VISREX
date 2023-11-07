@@ -2,18 +2,18 @@
 import xml.etree.ElementTree as ET
 from graphviz import Digraph
 import io
-from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsTextItem, QGraphicsPathItem
+from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsTextItem, QGraphicsPathItem
 from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPolygonF, QPainterPath, QFont, QColor, QPen
 import xml.etree.ElementTree as ET
 import re
 
 
-from .flowchart_items import FlowchartEllipse, FlowchartPolygon
+from .flowchart_items import FlowchartEllipse, FlowchartPolygon, LabelTextItem
 
 class GraphvizZoomableFlowchart(QGraphicsView):
-    def __init__(self, dot:Digraph, edges_color:str = None):
-        super().__init__()
+    def __init__(self, dot:Digraph, edges_color:str = None, parent = None):
+        super().__init__(parent=parent)
 
         svg_file = dot.pipe(format='svg')
         svg_stream = io.BytesIO(svg_file)
@@ -75,7 +75,12 @@ class GraphvizZoomableFlowchart(QGraphicsView):
         else:
             super().wheelEvent(event)
     
-    def set_edges_color(self, color:str):
+    def dark_mode(self, active:bool):
+        color = "#000000"
+
+        if active:
+            color = "#ffffff"
+        
         self.edges_color = color
         
         for edge in self.edges:
@@ -89,8 +94,7 @@ class GraphvizZoomableFlowchart(QGraphicsView):
         
         for edge_label in self.edges_labels:
             edge_label.setDefaultTextColor(QColor(color))
-
-
+        
     def _draw_edges(self, edges : list[ET.Element]):
         
         for edge in edges:
@@ -171,7 +175,8 @@ class GraphvizZoomableFlowchart(QGraphicsView):
             self.nodes[title.text] = polygon_item
 
             if text is not None:
-                node_label = QGraphicsTextItem(text.text)
+                node_label = LabelTextItem(text.text, polygon_item)
+                node_label.setAcceptHoverEvents(True)
                 node_label.setZValue(1)
 
                 node_label.setFont(QFont('Arial', pointSize=int(float(text.get('font-size')))-5))
@@ -207,7 +212,7 @@ class GraphvizZoomableFlowchart(QGraphicsView):
             self.nodes[title.text] = ellipse_item
 
             if text is not None:
-                node_label = QGraphicsTextItem(text.text)
+                node_label = LabelTextItem(text.text, ellipse_item)
                 node_label.setZValue(1)
                 
                 node_label.setFont(QFont('Arial', pointSize=int(float(text.get('font-size')))-5))

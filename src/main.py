@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QMenu, QSplitter, QLabel, QActionGroup, QStatusBar, QToolBar, QApplication, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QAction, QTableWidgetItem
+from PyQt5.QtWidgets import QMenu, QActionGroup, QStatusBar, QToolBar, QApplication, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QAction
 from PyQt5.QtCore import Qt
 import qtawesome as qta
 import qdarktheme
@@ -44,15 +44,21 @@ class MainWindow(QMainWindow):
         toolbar_actions = QActionGroup(self)
         toolbar_actions.setExclusive(True)
 
-        progress_button = QAction(qta.icon("fa5s.tasks"), "Progress", self)
-        progress_button.setStatusTip("Analysis' progresses")
-        progress_button.triggered.connect(lambda: stacked_widget.setCurrentIndex(0))
-        progress_button.setCheckable(True)
-        progress_button.setChecked(True)
-        toolbar_actions.addAction(progress_button)
-        self.toolbar.addAction(progress_button)
+        self.progress_button = QAction(qta.icon("fa5s.tasks"), "Progress", self)
+        self.progress_button.setStatusTip("Analysis' progresses")
+        self.progress_button.triggered.connect(lambda: stacked_widget.setCurrentIndex(0))
+        self.progress_button.setCheckable(True)
+        self.progress_button.setChecked(True)
+        toolbar_actions.addAction(self.progress_button)
+        self.toolbar.addAction(self.progress_button)
 
         self.toolbar.addSeparator()
+
+        self.process_injection_button = QAction(qta.icon("fa5s.syringe"), "Read process memory", self)
+        self.process_injection_button.triggered.connect(lambda: ReadProcessMemory(self).exec_())
+        self.process_injection_button.setCheckable(False)
+        toolbar_actions.addAction(self.process_injection_button)
+        self.toolbar.addAction(self.process_injection_button)
 
         self.setStatusBar(QStatusBar(self))
 
@@ -79,14 +85,6 @@ class MainWindow(QMainWindow):
         appearance_submenu.addAction(dark_mode_action)
 
         view_menu.addMenu(appearance_submenu)
-
-        analysis_menu = menubar.addMenu('Analysis')
-        process_injection_menu = QMenu('Process injection', self)
-        extract_injected_action = QAction('Read process memory', self, checkable=False)
-        extract_injected_action.triggered.connect(lambda: ReadProcessMemory(self).exec_())
-        process_injection_menu.addAction(extract_injected_action)
-
-        analysis_menu.addMenu(process_injection_menu)
 
         layout = QVBoxLayout()
         layout.addWidget(stacked_widget)
@@ -115,12 +113,11 @@ class MainWindow(QMainWindow):
         event.accept()
     
     def dark_mode(self, active):
-        if active:
-            qdarktheme.setup_theme('dark')
-            self.interactive_workflow_view.set_edges_color("#ffffff")
-        else:
-            qdarktheme.setup_theme('light')
-            self.interactive_workflow_view.set_edges_color("#000000")
+
+        qdarktheme.setup_theme('dark' if active else 'light')
+        self.interactive_workflow_view.dark_mode(active)
+        self.progress_button.setIcon(qta.icon("fa5s.tasks", color="white" if active else "black"))
+        self.process_injection_button.setIcon(qta.icon("fa5s.syringe", color="white" if active else "black"))
 
     def close(self) -> bool:
         self.tmp_dir.cleanup()
