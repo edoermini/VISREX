@@ -1,27 +1,12 @@
 import sys
 import typing
-from PyQt5.QtWidgets import QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsSceneMouseEvent, QGraphicsView, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsTextItem, QApplication
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QPen, QBrush
+from PyQt5.QtWidgets import QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsSceneMouseEvent, QGraphicsView, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsTextItem, QApplication, QGraphicsPathItem
+from PyQt5.QtCore import Qt, QPointF
+from PyQt5.QtGui import QColor, QPen, QBrush, QPolygonF, QPainterPath, QFont
 from PyQt5.QtSvg import QGraphicsSvgItem, QSvgRenderer
 import io
 import xml.etree.ElementTree as ET
 import re
-
-class SVGItem(QGraphicsSvgItem):
-    def __init__(self, svg, node_id, ax, ay):
-
-        self.node_id = node_id
-
-        svg_renderer = QSvgRenderer(io.BytesIO(svg.encode()).read())
-        svg_item = QGraphicsSvgItem()
-        svg_item.setSharedRenderer(svg_renderer)
-        svg_item.setElementId(self.node_id)
-        svg_item.setPos(ax, ay)
-    
-    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent | None) -> None:
-        print(f"clicked {self.node_id}")
-        return super().mouseDoubleClickEvent(event)
 
 class ClickableSVGViewer(QGraphicsView):
     def __init__(self, svg_path):
@@ -42,79 +27,86 @@ class ClickableSVGViewer(QGraphicsView):
 
         graph_element = root.find('.//{http://www.w3.org/2000/svg}g[@id="graph0"]')
 
-        last_2_nodes = []
-
         # Iterate through <g> elements and add them as separate items
         for g_element in graph_element.findall('.//{http://www.w3.org/2000/svg}g'):
             
             text = g_element.find(".//{http://www.w3.org/2000/svg}text")
+            
+            text_x = 0
+            text_y = 0
 
             if text is not None:
-                print(text.text)
-            ax = 0
-            ay = 0
+                text_x = float(text.get('x'))
+                text_y = float(text.get('y')) + self.viewbox[3]
+                node_label = QGraphicsTextItem(text.text)
+                node_label.setFont(QFont('Arial'))
+                self.scene.addItem(node_label)
 
-            print(g_element.text)
             ellipse = g_element.find('.//{http://www.w3.org/2000/svg}ellipse')
             polygon = g_element.find('.//{http://www.w3.org/2000/svg}polygon')
 
             if ellipse is not None:
-                ax = (float(ellipse.get('cx')) - float(ellipse.get('rx')))
-                ay = (float(ellipse.get('cy')) + self.viewbox[3]) - float(ellipse.get('ry'))
+                x = (float(ellipse.get('cx')) - float(ellipse.get('rx')))
+                y = (float(ellipse.get('cy')) + self.viewbox[3]) - float(ellipse.get('ry'))
+                width = float(ellipse.get('rx'))*2
+                height = float(ellipse.get('ry'))*2
 
-                if len(last_2_nodes) == 2:
-                    last_2_nodes.pop(0)
+                ellipse_item = QGraphicsEllipseItem(x, y, width, height)  # (x, y, width, height)
+                self.scene.addItem(ellipse_item)
 
+                text_x = (ellipse_item.boundingRect().center().x() - node_label.boundingRect().width() / 2)
+                text_y = (ellipse_item.boundingRect().center().y() - node_label.boundingRect().height() / 2)
 
-                last_2_nodes.append((ay, ay + 2*float(ellipse.get('ry'))))
-                
             elif polygon is not None:
                 points = polygon.get('points').split(' ')
             
                 # (bottom, left, top, right)
-                polygon_points = [ (float(point.split(',')[0]), float(point.split(',')[1])) for point in points ]
+                polygon_points = [ (float(point.split(',')[0]), float(point.split(',')[1]) + self.viewbox[3]) for point in points ]
 
                 path = g_element.find('.//{http://www.w3.org/2000/svg}path')
 
                 if path is not None:
                     print(path)
-                    print(last_2_nodes)
-
-                    matched = re.match(r'M(-?\d+\.?\d{0,2}),(-?\d+\.?\d{0,2}).*\s(-?\d+\.?\d{0,2}),(-?\d+\.?\d{0,2})', path.get('d'))
-                    print(path.get('d'))
-
-                    start_x = float(matched.group(1))
-                    start_y = float(matched.group(2))
-                    end_x = float(matched.group(3))
-                    end_y = float(matched.group(4))
-
-                    ax = start_x if start_x < end_x else end_x
-
-                    if start_y > end_y:
-                        ay =  polygon_points[1][1] + self.viewbox[3]
-                    else:
-                        ay =  start_y + self.viewbox[3]
-
-                else:
-                    ax = polygon_points[1][0]
-                    ay = polygon_points[2][1] + self.viewbox[3] - abs(polygon_points[2][1] - polygon_points[0][1])
                     
-                    if len(last_2_nodes) == 2:
-                        last_2_nodes.pop(0)
+                    painter_path = QPainterPath()
 
-                    last_2_nodes.append((ay, ay + abs(polygon_points[2][1] - polygon_points[0][1])))
 
-            print(ax, ay)
+                    path_str = path.get('d')
+                    commands = re.findall(r'([MC])([^MC]*)', path_str)
 
-            svg_item_content = f"<svg>{ET.tostring(g_element, encoding='utf-8').decode('utf-8')}</svg>"
-            svg_renderer = QSvgRenderer(io.BytesIO(svg_item_content.encode()).read())
-            svg_item = QGraphicsSvgItem()
-            svg_item.setSharedRenderer(svg_renderer)
-            svg_item.setElementId(g_element.get('id', ''))
+                    for command, args_str in commands:
+                        args = [float(arg) if i%2 == 0 else float(arg) + self.viewbox[3] for i, arg in enumerate(args_str.replace(',', ' ').split())]
+                        
+                        print(args)
 
-            svg_item.setPos(ax, ay)
+                        if command == 'M':
+                            painter_path.moveTo(*args)
+                        elif command == 'C':
+                            for i in range(0, len(args), 6):
+                                painter_path.cubicTo(*args[i:i+6])
 
-            self.scene.addItem(svg_item)
+                    path_item = QGraphicsPathItem(painter_path)
+                    self.scene.addItem(path_item)
+
+                    polygon = QPolygonF([QPointF(x, y) for x, y in polygon_points])
+                    polygon_item = QGraphicsPolygonItem(polygon)
+                    self.scene.addItem(polygon_item)
+
+                    center_point = painter_path.pointAtPercent(0.5)
+                    
+                    text_x = (center_point.x() - node_label.boundingRect().width() / 2)
+                    text_y = (center_point.y() - node_label.boundingRect().height() / 2)
+                
+                else:
+                    polygon = QPolygonF([QPointF(x, y) for x, y in polygon_points])
+                    polygon_item = QGraphicsPolygonItem(polygon)
+                    self.scene.addItem(polygon_item)
+
+                    text_x = (polygon_item.boundingRect().center().x() - node_label.boundingRect().width() / 2)
+                    text_y = (polygon_item.boundingRect().center().y() - node_label.boundingRect().height() / 2)
+
+            if text is not None:
+                node_label.setPos(text_x, text_y)  # Adjust position based on the ellipse
 
         # Iterate through items in the SVG and make them clickable
         for item in self.scene.items():
