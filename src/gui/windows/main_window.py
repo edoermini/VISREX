@@ -8,7 +8,7 @@ import pickle
 
 from gui.updaters import ActivityUpdater
 from gui.dialogs import ReadProcessMemoryDialog
-from gui.flowcharts import GraphvizZoomableFlowchart
+from gui.flowcharts import GraphvizFlowchart
 from gui.tables import ResponsiveTableWidget
 
 from analysis import Analysis
@@ -38,7 +38,7 @@ class MainWindow(QMainWindow):
         # Creare un widget a pila per le diverse viste
         stacked_widget = QStackedWidget()
 
-        self.progress_view = GraphvizZoomableFlowchart(self.analysis.workflow.dot_code(), "#00000")
+        self.progress_view = GraphvizFlowchart(self.analysis.workflow.dot_code(), "#00000")
         self.progress_view.set_opacity(0.2)
 
         progress_page = QWidget()

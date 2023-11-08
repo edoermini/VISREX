@@ -1,1 +1,1 @@
-from .graphviz_zoomable_flowchart import GraphvizZoomableFlowchart
+from .graphviz_flowchart import GraphvizFlowchart

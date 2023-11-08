@@ -8,7 +8,7 @@ from analysis import Analysis
 class ActivityUpdater(QObject):
     dataUpdated = pyqtSignal()
 
-    def __init__(self, analysis:Analysis, timeout=1000):
+    def __init__(self, analysis: Analysis, timeout=1000):
         super().__init__()
         self.analysis = analysis
         self.thread_pool = QThreadPool.globalInstance()
@@ -21,13 +21,16 @@ class ActivityUpdater(QObject):
         if not self.running:
             return  # Do not start a new task if the updater is stopped
 
-        # Simulate updating data asynchronously
-        task = ActivityUpdateTask(self.analysis, self.dataUpdated)
-        self.thread_pool.start(task)
+        # Check if there are available threads in the pool
+        if self.thread_pool.activeThreadCount() < self.thread_pool.maxThreadCount():
+            # Simulate updating data asynchronously
+            task = ActivityUpdateTask(self.analysis, self.dataUpdated)
+            self.thread_pool.start(task)
 
     def stop(self):
         # Stop the timer and set the running flag to False
         self.timer.stop()
+        self.running = False
         self.running = False
 
 class ActivityUpdateTask(QRunnable):
