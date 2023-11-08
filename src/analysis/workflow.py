@@ -4,14 +4,14 @@ from io import IOBase
 from graphviz import Digraph
 
 class Workflow:
-	def __init__(self, workflow:dict[str,str]|TextIO = None):
+	def __init__(self, malware_executable:str = None):
 		
 		self.__dict__ = {
 		  "workflow": {
 			"nodes": {
 			  "start": {
 				"type": "activity",
-				"name": "Malware sample",
+				"name": "Malware sample" if not malware_executable else malware_executable,
 				"description": "",
 				"phase": "",
 				"color": "#4051B5",
@@ -308,11 +308,33 @@ class Workflow:
 				"phase": "Behavioral analysis",
 				"color": "#00A99D",
 				"results": [],
-				"tools": []
+				"tools": [
+				  	"gdiproc",
+					"memoryze",
+					"systracer",
+					"autoruns",
+					"floatnotmyfault",
+					"regshot",
+					"dirwatch",
+					"processhacker",
+					"snort",
+					"apatedns",
+					"spymetool",
+					"malcodeanalystpack",
+					"netcat",
+					"capturebot",
+					"psfile",
+					"processexplorer",
+					"wireshark",
+					"mailpot",
+					"sniffhit",
+					"honeyd",
+					"processmonitor"
+				]
 			  },
 			  "bhvr_1": {
 				"type": "activity",
-				"name": "Run malware for 10 minutes",
+				"name": "Run malware",
 				"description": "",
 				"phase": "Behavioral analysis",
 				"color": "#00A99D",
@@ -326,7 +348,29 @@ class Workflow:
 				"phase": "Behavioral analysis",
 				"color": "#00A99D",
 				"results": [],
-				"tools": []
+				"tools": [
+				  	"gdiproc",
+					"memoryze",
+					"systracer",
+					"autoruns",
+					"floatnotmyfault",
+					"regshot",
+					"dirwatch",
+					"processhacker",
+					"snort",
+					"apatedns",
+					"spymetool",
+					"malcodeanalystpack",
+					"netcat",
+					"capturebot",
+					"psfile",
+					"processexplorer",
+					"wireshark",
+					"mailpot",
+					"sniffhit",
+					"honeyd",
+					"processmonitor"
+				]
 			  },
 			  "bhvr_3": {
 				"type": "activity",
@@ -732,14 +776,12 @@ class Workflow:
 				}
 			}
 		}
-
-		if isinstance(workflow, IOBase):
-			with open(workflow, 'r') as wf:
-				self.__dict__ = json.load(wf)
-		elif isinstance(workflow, dict):
-			self.__dict__ = workflow.copy()
 		
 		self._check_structure()
+
+		self.__dict__['workflow']['nodes']['bhvr_1']['tools'].append(malware_executable)
+		self.__dict__['tools'][malware_executable] = {}
+		self.__dict__['tools'][malware_executable]['regex'] = malware_executable
 	
 	def _check_structure(self):
 		

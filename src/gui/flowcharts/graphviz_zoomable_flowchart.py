@@ -113,8 +113,6 @@ class GraphvizZoomableFlowchart(QGraphicsView):
 
             for command, args_str in commands:
                 args = [float(arg) if i%2 == 0 else float(arg) + self.viewbox[3] for i, arg in enumerate(args_str.replace(',', ' ').split())]
-                
-                print(args)
 
                 if command == 'M':
                     painter_path.moveTo(*args)

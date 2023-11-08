@@ -3,12 +3,6 @@ from PyQt5.QtWidgets import QGraphicsItem, QGraphicsEllipseItem, QGraphicsPolygo
 from PyQt5.QtGui import QColor, QBrush, QPolygonF, QPen
 from PyQt5.QtCore import Qt
 
-class FlowchartItem(QGraphicsItem):
-    def __init__(self, parent: QGraphicsItem | None = ...) -> None:
-        super().__init__(parent)
-
-        self.fill_color = None
-
 class FlowchartEllipse(QGraphicsEllipseItem):
     def __init__(self, x: float, y: float, w:float, h:float, parent: QGraphicsItem | None = None, hex_color:str = "#00000"):
         super().__init__(x, y, w, h, parent)
@@ -35,6 +29,7 @@ class FlowchartEllipse(QGraphicsEllipseItem):
 class FlowchartPolygon(QGraphicsPolygonItem):
     def __init__(self, polygon:QPolygonF, parent: QGraphicsItem | None = None, hex_color:str = "#00000"):
         super().__init__(polygon, parent)
+        self.setAcceptHoverEvents(True)
 
         self.color = QColor(hex_color)
 
@@ -68,5 +63,3 @@ class LabelTextItem(QGraphicsTextItem):
     def hoverLeaveEvent(self, event):
         # Change the appearance back when the mouse leaves the text item
         self.flowchart_item.hoverLeaveEvent(event)
-
-

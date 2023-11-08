@@ -4,9 +4,9 @@ from masup.modules.processes import Process
 from gui.dialogs.hex_viewer import HexViewer
 import pymem.exception
 
-class ReadProcessMemory(QDialog):
+class ReadProcessMemoryDialog(QDialog):
     def __init__(self, parent=None):
-        super(ReadProcessMemory, self).__init__(parent)
+        super(ReadProcessMemoryDialog, self).__init__(parent)
 
         self.parent_window = parent
         self.initUI()

@@ -1,1 +1,1 @@
-from .updaters import ProgressTableUpdater
+from .updaters import ActivityUpdater

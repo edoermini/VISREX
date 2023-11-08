@@ -1,13 +1,14 @@
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QSizePolicy
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QSizePolicy, QHeaderView, QVBoxLayout
 import json
 
 class ResponsiveTableWidget(QTableWidget):
-    def __init__(self, rows, headers: list[str]):
-        super(ResponsiveTableWidget, self).__init__(rows, len(headers))
+    def __init__(self, rows, headers: list[str], parent=None):
+        super(ResponsiveTableWidget, self).__init__(rows, len(headers), parent)
         self.setHorizontalHeaderLabels(headers)
         self.setEditTriggers(QTableWidget.NoEditTriggers)
         self.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.horizontalHeader().setStretchLastSection(True)
 
     def resizeEvent(self, event):
         super(ResponsiveTableWidget, self).resizeEvent(event)
@@ -30,34 +31,3 @@ class ResponsiveTableWidget(QTableWidget):
 
     def isCollapsed(self):
         return self.width() == 0
-
-class JSONResponsiveTableWidget(ResponsiveTableWidget):
-    
-    def __init__(self, json_file:str, columns:list[str], headers:list[str]):
-        """A Qt Table widget created from a json file
-
-        Keyword arguments:
-        json_file (str): the path to json file
-        columns (list[str]): for each element of the json 
-        headers (OrderedDict[str, str]): a dict representing the columns of the table;
-        """
-
-        data = {}
-
-        with open(json_file, 'r') as file:
-            data = json.load(file)
-        
-        nodes = data['workflow']['nodes']
-
-        super().__init__(len(nodes), headers)
-
-        # Popolare la tabella con i dati dal JSON
-        for node_id, (_, node_data) in enumerate(nodes.items()):
-            row_position = node_id  # Ottenere la posizione della riga dall'ID del nodo
-            for i, column in enumerate(columns):
-                cell = node_data[column]
-
-                if isinstance(node_data[column], list):
-                    cell = ", ".join(node_data[column])
-
-                self.setItem(row_position, i, QTableWidgetItem(cell))
