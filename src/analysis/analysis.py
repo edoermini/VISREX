@@ -2,15 +2,14 @@ import time
 import psutil
 import re
 import time
-from datetime import datetime
 from typing import Any
-import os
+import pickle
 
 from .workflow import Workflow
 
 class Analysis:
-    def __init__(self, workflow:Workflow):
-        self.workflow = workflow
+    def __init__(self, malware_sample:str=""):
+        self.workflow = Workflow(malware_sample)
         self.activities : dict[str, str] = {}
         self.active_tools : set[str] = set([])
         self.activity_log : list[dict[str, Any]] = []
@@ -83,4 +82,6 @@ class Analysis:
                 self.activities[node_id]['active'] = False
                 self.activities[node_id]['stop_time'] = time.time() - activity['start_time']
 
-    
+    def export_analysis(self, file_path:str):
+        with open(file_path, "wb") as file:
+            pickle.dump(self, file)

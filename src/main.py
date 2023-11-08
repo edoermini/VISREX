@@ -28,7 +28,7 @@ if __name__ == '__main__':
                     malware_sample = new_analysis_dialog.file_name
             
             else:
-                open_analysis_dialog = ChoseFileDialog("Chose analysis", "Malware Supporter Files (*.masup)")
+                open_analysis_dialog = ChoseFileDialog("Chose analysis", "Malware Analysis Supporter Files (*.masup)")
                 result = open_analysis_dialog.exec_()
 
                 if result == QDialog.Accepted and open_analysis_dialog.file_name != "":
@@ -38,7 +38,7 @@ if __name__ == '__main__':
             break
 
     if malware_sample or old_analysis:
-        main_window = MainWindow(malware_sample=malware_sample, old_analysis=old_analysis)
+        main_window = MainWindow(malware_sample=malware_sample, analysis_file=old_analysis)
         main_window.show()
 
         sys.exit(app.exec_())

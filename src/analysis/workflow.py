@@ -4,7 +4,7 @@ from io import IOBase
 from graphviz import Digraph
 
 class Workflow:
-	def __init__(self, malware_executable:str = None):
+	def __init__(self, malware_executable:str = ""):
 		
 		self.__dict__ = {
 		  "workflow": {
@@ -779,9 +779,10 @@ class Workflow:
 		
 		self._check_structure()
 
-		self.__dict__['workflow']['nodes']['bhvr_1']['tools'].append(malware_executable)
-		self.__dict__['tools'][malware_executable] = {}
-		self.__dict__['tools'][malware_executable]['regex'] = malware_executable
+		if malware_executable:
+			self.__dict__['workflow']['nodes']['bhvr_1']['tools'].append(malware_executable)
+			self.__dict__['tools'][malware_executable] = {}
+			self.__dict__['tools'][malware_executable]['regex'] = malware_executable
 	
 	def _check_structure(self):
 		

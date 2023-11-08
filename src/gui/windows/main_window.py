@@ -1,9 +1,10 @@
-from PyQt5.QtWidgets import QMenu, QActionGroup, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QAction, QTableWidgetItem, QSizePolicy
+from PyQt5.QtWidgets import QMenu, QActionGroup, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QAction, QTableWidgetItem, QFileDialog
 from PyQt5.QtCore import Qt
 import qtawesome as qta
 import qdarktheme
 import os
 from datetime import datetime
+import pickle
 
 from gui.updaters import ActivityUpdater
 from gui.dialogs import ReadProcessMemoryDialog
@@ -11,17 +12,22 @@ from gui.flowcharts import GraphvizZoomableFlowchart
 from gui.tables import ResponsiveTableWidget
 
 from analysis import Analysis
-from analysis import Workflow
 
 class MainWindow(QMainWindow):
-    def __init__(self, malware_sample=None, old_analysis=None, dark_mode=False):
+    def __init__(self, malware_sample=None, analysis_file=None, dark_mode=False):
         super(MainWindow, self).__init__()
 
         self.malware_sample = malware_sample
-        self.old_analysis = old_analysis
+        self.analysis_file = analysis_file
+        self.analysis = None
 
-        self.workflow = Workflow(os.path.basename(self.malware_sample))
-        self.analysis = Analysis(self.workflow)
+        if self.malware_sample is not None:
+            self.malware_sample = os.path.basename(self.malware_sample)
+            self.analysis = Analysis(self.malware_sample)
+        
+        else:
+            with open(self.analysis_file, "rb") as file:
+                self.analysis = pickle.load(file)
         
         self.initUI()
         self.dark_mode(dark_mode)
@@ -32,7 +38,7 @@ class MainWindow(QMainWindow):
         # Creare un widget a pila per le diverse viste
         stacked_widget = QStackedWidget()
 
-        self.progress_view = GraphvizZoomableFlowchart(self.workflow.dot_code(), "#00000")
+        self.progress_view = GraphvizZoomableFlowchart(self.analysis.workflow.dot_code(), "#00000")
         self.progress_view.set_opacity(0.2)
 
         progress_page = QWidget()
@@ -83,6 +89,18 @@ class MainWindow(QMainWindow):
         menubar = self.menuBar()
         file_menu = menubar.addMenu('File')
 
+        save_action = QAction('Save', self)
+        save_action.triggered.connect(self.save_file)
+        file_menu.addAction(save_action)
+
+        save_with_name_action = QAction('Save with name', self)
+        save_with_name_action.triggered.connect(self.save_with_name)
+        file_menu.addAction(save_with_name_action)
+
+        load_action = QAction('Open analysis', self)
+        load_action.triggered.connect(self.open_file)
+        file_menu.addAction(load_action)
+
         exit_action = QAction('Quit', self)
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
@@ -132,7 +150,28 @@ class MainWindow(QMainWindow):
                 item = QTableWidgetItem(value)
                 self.activity_log_table.setItem(row, col, item)
 
+    def save_file(self):
+
+        if not self.analysis_file:
+            self.save_with_name()
+            return
+        
+        self.analysis.export_analysis(self.analysis_file)
+
+    def save_with_name(self):
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Object", "", "Malware Analysis Supporter Files (*.masup)")
+        if file_path:
+            self.analysis_file = file_path
+            self.analysis.export_analysis(self.analysis_file)
+
+    def open_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Load Object", "", "Malware Analysis Supporter Files (*.masup)")
+        if file_path:
+            with open(file_path, "rb") as file:
+                self.analysis = pickle.load(file)
+
     def closeEvent(self, event):
+        self.activity_updater.stop()
         event.accept()
     
     def dark_mode(self, active):
