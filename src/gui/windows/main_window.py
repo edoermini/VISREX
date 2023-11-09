@@ -232,8 +232,9 @@ class MainWindow(QMainWindow):
 		context_menu.exec_(mouse_pos)
 	
 	def openTool(self, node_id):
-		dialog = OpenToolDialog(self.analysis.workflow['workflow']['nodes'][node_id]['tools'])
-		result = dialog.exec_()
+		tools = [tool for tool in self.analysis.workflow['workflow']['nodes'][node_id]['tools'] if tool in self.analysis.executables]
+		dialog = OpenToolDialog(tools)
+		dialog.exec_()
 
 	def close(self) -> bool:
 		return super().close()
