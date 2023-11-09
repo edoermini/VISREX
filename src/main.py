@@ -24,7 +24,6 @@ if __name__ == '__main__':
                 result = new_analysis_dialog.exec_()
 
                 if result == QDialog.Accepted and new_analysis_dialog.file_name != "":
-                    print("new analysis")
                     malware_sample = new_analysis_dialog.file_name
             
             else:
@@ -32,7 +31,6 @@ if __name__ == '__main__':
                 result = open_analysis_dialog.exec_()
 
                 if result == QDialog.Accepted and open_analysis_dialog.file_name != "":
-                    print("open analysis")
                     old_analysis = open_analysis_dialog.file_name
         else:
             break

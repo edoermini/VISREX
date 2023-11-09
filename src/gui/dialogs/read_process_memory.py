@@ -41,25 +41,38 @@ class ReadProcessMemoryDialog(QDialog):
         try:
             process = Process(self.process_name.text())
         except pymem.exception.ProcessNotFound as msg:
-            self.show_error_dialog(str(msg))
+            self.showErrorDialog(str(msg))
             return
 
         try:
             memory = process.extract_memory(int(self.start_address.text(), 16), int(self.bytes_length.text()))
         except ValueError:
-            self.show_error_dialog(f"{self.bytes_length.text()} is not a valid hex value")
+            self.showErrorDialog(f"{self.bytes_length.text()} is not a valid hex value")
             return
         except pymem.exception.MemoryReadError:
-            self.show_error_dialog(f"Could not read memory at: {self.start_address.text()}, length: {self.bytes_length.text()}")
+            self.showErrorDialog(f"Could not read memory at: {self.start_address.text()}, length: {self.bytes_length.text()}")
             return
 
-        HexViewer(f"Memory view of {self.process_name.text()} @ address {self.start_address.text()}, showing {self.bytes_length.text()} bytes", memory, self.parent_window).show()
+        self.accept()
 
-        self.close()
+        HexViewer(f"Memory view of {self.process_name.text()} @ address {self.start_address.text()}, showing {self.bytes_length.text()} bytes", memory, self.parent_window).show()
     
-    def show_error_dialog(self, message):
+    def showErrorDialog(self, message):
         error_dialog = QMessageBox(self)
         error_dialog.setIcon(QMessageBox.Critical)
         error_dialog.setWindowTitle("Error")
         error_dialog.setText(f"An error occurred:\n{message}")
         error_dialog.exec_()
+    
+    def closeEvent(self, event) -> None:
+        self.accept()
+        self.setResult(QDialog.Rejected)
+    
+    def getProcessName(self):
+        return self.process_name.text()
+
+    def getStartAddress(self):
+        return self.start_address.text()
+    
+    def getBytesLength(self):
+        return self.bytes_length.text()

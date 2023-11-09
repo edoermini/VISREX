@@ -4,6 +4,7 @@ import re
 from time import time
 from typing import Any
 import pickle
+import threading
 
 from .workflow import Workflow
 
@@ -12,8 +13,12 @@ class Analysis:
 		self.workflow = Workflow(malware_sample)
 		self.activities : dict[str, str] = {}
 		self.active_tools : set[str] = set([])
+		
 		self.activity_log : list[dict[str, Any]] = []
-		self.executables : dict[str, str] = {}
+		self.executables : dict[str, dict[str, Any]] = {}
+
+		# locks both self.activity_log and self.executables resources
+		self.activity_log_lock = threading.Lock()
 	
 	def _update_active_tools(self):
 		current_time = time()
@@ -28,11 +33,23 @@ class Analysis:
 				process_name = process.name()
 			except psutil.NoSuchProcess:
 				continue
+				
+			try:
+				executable = process.exe()
+				arguments = process.cmdline()[1:]
+			except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+				executable = ""
+				arguments = []
 
 			for tool_name, tool in self.workflow['tools'].items():
 				if re.match(tool['regex'], process_name):
 					new_active_tools.add(tool_name)
-					self.executables[tool_name] = process.exe()
+
+					with self.activity_log_lock:
+						self.executables[tool_name] = {
+							'executable': executable,
+							'arguments': arguments
+						}
 
 		closed_tools = self.active_tools - new_active_tools
 		opened_tools = new_active_tools - self.active_tools
@@ -41,19 +58,21 @@ class Analysis:
 			{
 				"time": current_time,
 				"tool": tool,
-				"opened": False,
-				"executable": self.executables[tool]
+				"activity": "Close tool",
+				**self.executables[tool],
+
 			} for tool in closed_tools
 		] + [
 			{
 				"time": current_time,
 				"tool": tool,
-				"opened": True,
-				"executable": self.executables[tool]
+				"activity": "Open tool",
+				**self.executables[tool]
 			} for tool in opened_tools
 		]
 
-		self.activity_log.extend(log_entries)
+		with self.activity_log_lock:
+			self.activity_log.extend(log_entries)
 
 		self.active_tools = new_active_tools
 
@@ -85,3 +104,7 @@ class Analysis:
 	def export_analysis(self, file_path:str):
 		with open(file_path, "wb") as file:
 			pickle.dump(self, file)
+
+	def update_activity_log(self, data:list[dict[str, Any]]):
+		with self.activity_log_lock:
+			self.activity_log.extend(data)

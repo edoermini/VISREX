@@ -51,7 +51,7 @@ class GraphvizFlowchartItem(QGraphicsItemGroup):
 
 		# Calculate the luminance using the formula: Y = 0.299*R + 0.587*G + 0.114*B
 		luminance = 0.299 * red + 0.587 * green + 0.114 * blue
-		print(alpha)
+		
 		# Choose the text color based on the luminance
 		if luminance > 128 or alpha < 128:
 			return QColor(Qt.black)
