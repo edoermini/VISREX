@@ -5,6 +5,8 @@ from time import time
 from typing import Any
 import pickle
 import threading
+import os
+import platform
 
 from .workflow import Workflow
 
@@ -19,6 +21,7 @@ class Analysis:
 
 		# locks both self.activity_log and self.executables resources
 		self.activity_log_lock = threading.Lock()
+		self.executables_lock = threading.Lock()
 	
 	def _update_active_tools(self):
 		current_time = time()
@@ -44,12 +47,8 @@ class Analysis:
 			for tool_name, tool in self.workflow['tools'].items():
 				if re.match(tool['regex'], process_name):
 					new_active_tools.add(tool_name)
-
-					with self.activity_log_lock:
-						self.executables[tool_name] = {
-							'executable': executable,
-							'arguments': arguments
-						}
+					self.update_executable(tool_name, executable)
+					self.update_executable_arguments(tool_name, arguments)
 
 		closed_tools = self.active_tools - new_active_tools
 		opened_tools = new_active_tools - self.active_tools
@@ -71,8 +70,7 @@ class Analysis:
 			} for tool in opened_tools
 		]
 
-		with self.activity_log_lock:
-			self.activity_log.extend(log_entries)
+		self.update_activity_log(log_entries)
 
 		self.active_tools = new_active_tools
 
@@ -108,3 +106,21 @@ class Analysis:
 	def update_activity_log(self, data:list[dict[str, Any]]):
 		with self.activity_log_lock:
 			self.activity_log.extend(data)
+	
+	def update_executable(self, tool_name:str, executable:str):
+		with self.executables_lock:
+			if tool_name in self.executables:
+				self.executables[tool_name]['executable'] = executable
+			
+			else:
+				self.executables[tool_name] = {
+					'executable': executable,
+					'arguments': []
+				}
+	
+	def update_executable_arguments(self, tool_name:str, arguments:list[str]):
+		with self.executables_lock:
+			if tool_name not in self.executables:
+				return
+			
+			self.executables[tool_name]['arguments'] = arguments

@@ -1,9 +1,6 @@
-import threading
-from PyQt5.QtCore import QObject, pyqtSignal, QThreadPool, QRunnable, QTimer, Qt
-import time
+from PyQt5.QtCore import QObject, pyqtSignal, QThreadPool, QRunnable, QTimer
 
 from analysis import Analysis
-
 
 class ActivityUpdater(QObject):
     dataUpdated = pyqtSignal()

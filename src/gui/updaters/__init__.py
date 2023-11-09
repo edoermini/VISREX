@@ -1,1 +1,1 @@
-from .updaters import ActivityUpdater
+from .activity_updater import ActivityUpdater

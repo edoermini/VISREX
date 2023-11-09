@@ -1,12 +1,16 @@
-from PyQt5.QtWidgets import QGraphicsItem, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsSceneHoverEvent, QGraphicsTextItem, QGraphicsItemGroup, QGraphicsPathItem
+import typing
+from PyQt5.QtWidgets import QGraphicsItem, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsSceneContextMenuEvent, QGraphicsSceneHoverEvent, QGraphicsTextItem, QGraphicsItemGroup, QGraphicsPathItem
 from PyQt5.QtGui import QColor, QBrush, QPolygonF, QPen, QPainterPath, QFont
-from PyQt5.QtCore import Qt, QPointF
+from PyQt5.QtCore import Qt, QPointF, QPoint, pyqtSignal, QObject
 
 import xml.etree.ElementTree as ET
 import re
 
+class GraphvizFlowchartNodeSignals(QObject):
+	rightClick = pyqtSignal(str, QPoint)
+
 class GraphvizFlowchartItem(QGraphicsItemGroup):
-	def __init__(self, flowchart_height:float, xml_text:str = "", parent: QGraphicsItem = None):
+	def __init__(self,flowchart_height:float, xml_text:str = "", parent: QGraphicsItem = None):
 		super().__init__(parent)
 
 		self.flowchart_height = flowchart_height
@@ -51,7 +55,7 @@ class GraphvizFlowchartItem(QGraphicsItemGroup):
 
 		# Calculate the luminance using the formula: Y = 0.299*R + 0.587*G + 0.114*B
 		luminance = 0.299 * red + 0.587 * green + 0.114 * blue
-		
+
 		# Choose the text color based on the luminance
 		if luminance > 128 or alpha < 128:
 			return QColor(Qt.black)
@@ -123,10 +127,14 @@ class GraphvizFlowchartEdge(GraphvizFlowchartItem):
 
 
 class GraphvizFlowchartDecision(GraphvizFlowchartItem):
-	def __init__(self, flowchart_height:float, xml_polygon: str, xml_text:str = "", parent: QGraphicsItem = None):
+
+	def __init__(self, node_id:str, flowchart_height:float, xml_polygon: str, xml_text:str = "", parent: QGraphicsItem = None):
 		super().__init__(flowchart_height, xml_text, parent)
 
+		self.signals = GraphvizFlowchartNodeSignals()
 		self.setAcceptHoverEvents(True)
+		
+		self.node_id = node_id
 
 		polygon = ET.fromstring(xml_polygon)
 
@@ -168,12 +176,20 @@ class GraphvizFlowchartDecision(GraphvizFlowchartItem):
 	def setOpacity(self, opacity: float) -> None:
 		self.item.setOpacity(opacity)
 		self.label.setDefaultTextColor(self._get_node_text_color(self.item))
+	
+	def contextMenuEvent(self, event: QGraphicsSceneContextMenuEvent | None) -> None:
+		mouse_pos = event.screenPos()
+		self.signals.rightClick.emit(self.node_id, mouse_pos)
 
 class GraphvizFlowchartProcess(GraphvizFlowchartItem):
-	def __init__(self, flowchart_height:float, xml_ellipse: str, xml_text:str = "", parent: QGraphicsItem = None):
+
+	def __init__(self, node_id:str, flowchart_height:float, xml_ellipse: str, xml_text:str = "", parent: QGraphicsItem = None):
 		super().__init__(flowchart_height, xml_text, parent)
 
+		self.signals = GraphvizFlowchartNodeSignals()
 		self.setAcceptHoverEvents(True)
+
+		self.node_id = node_id
 
 		ellipse = ET.fromstring(xml_ellipse)
 
@@ -225,3 +241,7 @@ class GraphvizFlowchartProcess(GraphvizFlowchartItem):
 	def setOpacity(self, opacity: float) -> None:
 		self.item.setOpacity(opacity)
 		self.label.setDefaultTextColor(self._get_node_text_color(self.item))
+	
+	def contextMenuEvent(self, event: QGraphicsSceneContextMenuEvent | None) -> None:
+		mouse_pos = event.screenPos()
+		self.signals.rightClick.emit(self.node_id, mouse_pos)

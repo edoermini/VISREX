@@ -2,18 +2,23 @@
 import xml.etree.ElementTree as ET
 from graphviz import Digraph
 import io
-from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsTextItem, QGraphicsPathItem
-from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QPolygonF, QPainterPath, QFont, QColor, QPen
+from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsTextItem, QMenu
+from PyQt5.QtCore import Qt, QObject, pyqtSignal, QPoint
+from PyQt5.QtGui import QColor
 import xml.etree.ElementTree as ET
 import re
 
 
 from .graphviz_flowchart_items import GraphvizFlowchartEdge, GraphvizFlowchartDecision, GraphvizFlowchartProcess
 
+class GraphzivFlowchartSignals(QObject):
+	rightClick = pyqtSignal(str, QPoint)
+
 class GraphvizFlowchart(QGraphicsView):
 	def __init__(self, dot:Digraph, edges_color:QColor = QColor("#00000"), parent = None):
 		super().__init__(parent=parent)
+
+		self.signals = GraphzivFlowchartSignals()
 
 		svg_file = dot.pipe(format='svg')
 		svg_stream = io.BytesIO(svg_file)
@@ -103,10 +108,10 @@ class GraphvizFlowchart(QGraphicsView):
 			if text is not None:
 				xml_text_str = ET.tostring(text, encoding='unicode')
 			
-			edge = GraphvizFlowchartEdge(self.viewbox[3], xml_path_str, xml_polygon_str, self.edges_color, xml_text_str)
+			flowchart_edge = GraphvizFlowchartEdge(self.viewbox[3], xml_path_str, xml_polygon_str, self.edges_color, xml_text_str)
 			
-			self.gscene.addItem(edge)
-			self.edges.append(edge)
+			self.gscene.addItem(flowchart_edge)
+			self.edges.append(flowchart_edge)
 	
 	def _draw_decision_nodes(self, decision_nodes : list[ET.Element]):
 
@@ -122,11 +127,12 @@ class GraphvizFlowchart(QGraphicsView):
 			if text is not None:
 				xml_text_str = ET.tostring(text, encoding='unicode')
 			
-			node = GraphvizFlowchartDecision(self.viewbox[3], xml_polygon_str, xml_text_str)
-			
-			self.gscene.addItem(node)
+			flowchart_node = GraphvizFlowchartDecision(title.text, self.viewbox[3], xml_polygon_str, xml_text_str)
+			flowchart_node.signals.rightClick.connect(self.nodeRightClick)
 
-			self.nodes[title.text] = node
+			self.gscene.addItem(flowchart_node)
+
+			self.nodes[title.text] = flowchart_node
 
 	def _draw_nodes(self, nodes : list[ET.Element]):
 
@@ -145,10 +151,11 @@ class GraphvizFlowchart(QGraphicsView):
 			if text is not None:
 				xml_text_str = ET.tostring(text, encoding='unicode')
 			
-			node = GraphvizFlowchartProcess(self.viewbox[3], xml_ellipse_str, xml_text_str)
-			self.gscene.addItem(node)
+			flowchart_node = GraphvizFlowchartProcess(title.text, self.viewbox[3], xml_ellipse_str, xml_text_str)
+			flowchart_node.signals.rightClick.connect(self.nodeRightClick)
+			self.gscene.addItem(flowchart_node)
 
-			self.nodes[title.text] = node
+			self.nodes[title.text] = flowchart_node
 
 	def setOpacity(self, opacity: float, node_id : str = None):
 		if not node_id:
@@ -157,3 +164,6 @@ class GraphvizFlowchart(QGraphicsView):
 		
 		else:
 			self.nodes[node_id].setOpacity(opacity)
+	
+	def nodeRightClick(self, node_id, mouse_pos):
+		self.signals.rightClick.emit(node_id, mouse_pos)
