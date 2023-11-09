@@ -38,15 +38,22 @@ class GraphvizFlowchartItem(QGraphicsItemGroup):
 
 			self.addToGroup(self.label)
 	
-	def _get_node_text_color(self, flowchart_item:QGraphicsItem):
-
+	def _get_node_text_color(self, flowchart_item: QGraphicsItem):
 		background_color = flowchart_item.brush().color()
 
-		# Calculate the luminance using the formula: Y = 0.299*R + 0.587*G + 0.114*B
-		luminance = 0.299 * background_color.red() + 0.587 * background_color.green() + 0.114 * background_color.blue()
+		# Use rgba() to get color with opacity
+		rgba_color = background_color.rgba()
 
+		red = (rgba_color >> 24) & 0xFF
+		green = (rgba_color >> 16) & 0xFF
+		blue = (rgba_color >> 8) & 0xFF
+		alpha = rgba_color & 0xFF
+
+		# Calculate the luminance using the formula: Y = 0.299*R + 0.587*G + 0.114*B
+		luminance = 0.299 * red + 0.587 * green + 0.114 * blue
+		print(alpha)
 		# Choose the text color based on the luminance
-		if luminance > 128:
+		if luminance > 128 or alpha < 128:
 			return QColor(Qt.black)
 		else:
 			return QColor(Qt.white)
@@ -107,11 +114,12 @@ class GraphvizFlowchartEdge(GraphvizFlowchartItem):
 
 		self.set_label(self.item, painter_path.pointAtPercent(0.5), self.color)
 	
-	def set_color(self, color:QColor):
+	def setColor(self, color:QColor):
 		self.arrow.setBrush(color)
 		self.arrow.setPen(QPen(QBrush(color), 1, Qt.SolidLine))
 		self.line.setPen(QPen(color, 1, Qt.SolidLine))
 		self.label.setDefaultTextColor(color)
+	
 
 
 class GraphvizFlowchartDecision(GraphvizFlowchartItem):
@@ -156,6 +164,10 @@ class GraphvizFlowchartDecision(GraphvizFlowchartItem):
 		pen = self.item.pen()
 		pen.setWidth(0)
 		self.item.setPen(pen)
+	
+	def setOpacity(self, opacity: float) -> None:
+		self.item.setOpacity(opacity)
+		self.label.setDefaultTextColor(self._get_node_text_color(self.item))
 
 class GraphvizFlowchartProcess(GraphvizFlowchartItem):
 	def __init__(self, flowchart_height:float, xml_ellipse: str, xml_text:str = "", parent: QGraphicsItem = None):
@@ -209,3 +221,7 @@ class GraphvizFlowchartProcess(GraphvizFlowchartItem):
 		pen = self.item.pen()
 		pen.setWidth(0)
 		self.item.setPen(pen)
+	
+	def setOpacity(self, opacity: float) -> None:
+		self.item.setOpacity(opacity)
+		self.label.setDefaultTextColor(self._get_node_text_color(self.item))

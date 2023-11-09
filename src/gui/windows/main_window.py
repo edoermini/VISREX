@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QMenu, QActionGroup, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QAction, QTableWidgetItem, QFileDialog
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
 import qtawesome as qta
 import qdarktheme
 import os
@@ -17,6 +18,7 @@ class MainWindow(QMainWindow):
     def __init__(self, malware_sample=None, analysis_file=None, dark_mode=False):
         super(MainWindow, self).__init__()
 
+        self.dark_mode = dark_mode
         self.malware_sample = malware_sample
         self.analysis_file = analysis_file
         self.analysis = None
@@ -30,7 +32,7 @@ class MainWindow(QMainWindow):
                 self.analysis = pickle.load(file)
         
         self.initUI()
-        self.dark_mode(dark_mode)
+        self.setDarkMode(self.dark_mode)
 
     def initUI(self):
         self.setWindowTitle("MASup (Malware Analysis Supporter)")
@@ -38,8 +40,8 @@ class MainWindow(QMainWindow):
         # Creare un widget a pila per le diverse viste
         stacked_widget = QStackedWidget()
 
-        self.progress_view = GraphvizFlowchart(self.analysis.workflow.dot_code(), "#00000")
-        self.progress_view.set_opacity(0.2)
+        self.progress_view = GraphvizFlowchart(self.analysis.workflow.dot_code(), QColor('#fffff') if self.dark_mode else QColor('#00000'))
+        self.progress_view.setOpacity(0.2)
 
         progress_page = QWidget()
         progress_page_layout = QVBoxLayout(progress_page)
@@ -115,7 +117,7 @@ class MainWindow(QMainWindow):
         appearance_submenu = QMenu('Appearance', self)
         dark_mode_action = QAction('Dark mode', self, checkable=True)
         dark_mode_action.setChecked(False)
-        dark_mode_action.triggered.connect(self.dark_mode)
+        dark_mode_action.triggered.connect(self.setDarkMode)
         appearance_submenu.addAction(dark_mode_action)
 
         view_menu.addMenu(appearance_submenu)
@@ -137,7 +139,7 @@ class MainWindow(QMainWindow):
         self.analysis.update_activities()
 
         for node_id in self.analysis.activities:
-            self.progress_view.set_opacity(1, node_id)
+            self.progress_view.setOpacity(1, node_id)
         
         for row, log in enumerate(self.analysis.activity_log):
 
@@ -174,10 +176,10 @@ class MainWindow(QMainWindow):
         self.activity_updater.stop()
         event.accept()
     
-    def dark_mode(self, active):
+    def setDarkMode(self, active):
 
         qdarktheme.setup_theme('dark' if active else 'light')
-        self.progress_view.dark_mode(active)
+        self.progress_view.setEdgesColor(QColor('#fffff') if active else QColor('#00000'))
         self.progress_page_button.setIcon(qta.icon("fa5s.tasks", color="white" if active else "black"))
         self.activity_log_page_button.setIcon(qta.icon("fa5s.history", color="white" if active else "black"))
         self.process_injection_button.setIcon(qta.icon("fa5s.syringe", color="white" if active else "black"))

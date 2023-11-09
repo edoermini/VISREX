@@ -12,7 +12,7 @@ import re
 from .graphviz_flowchart_items import GraphvizFlowchartEdge, GraphvizFlowchartDecision, GraphvizFlowchartProcess
 
 class GraphvizFlowchart(QGraphicsView):
-	def __init__(self, dot:Digraph, edges_color:str = "#00000", parent = None):
+	def __init__(self, dot:Digraph, edges_color:QColor = QColor("#00000"), parent = None):
 		super().__init__(parent=parent)
 
 		svg_file = dot.pipe(format='svg')
@@ -36,14 +36,33 @@ class GraphvizFlowchart(QGraphicsView):
 		self.edges_color = edges_color
 
 		self.edges : list[GraphvizFlowchartEdge] = [] # edges are made by a line and an arrow
-		self.nodes : dict[str,GraphvizFlowchartDecision | FlowchartPolygon] = {}
+		self.nodes : dict[str,GraphvizFlowchartProcess | GraphvizFlowchartDecision] = {}
 		self.edges_labels : list[QGraphicsTextItem] = []
 
 		self.viewbox : list[float] = [] # [min_x, min_y, width, height]
 
-		self.draw_flowchart()
+		self._draw_flowchart()
 	
-	def draw_flowchart(self):
+	def wheelEvent(self, event):
+		factor = 1.1
+		if event.modifiers() == Qt.ControlModifier:
+			if event.angleDelta().y() < 0:
+				factor = 1.0 / factor
+			self.scale(factor, factor)
+		elif event.modifiers() == Qt.ShiftModifier:
+			delta = event.angleDelta().y()
+			self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() + int(delta))
+		else:
+			super().wheelEvent(event)
+	
+	def setEdgesColor(self, color:QColor):
+
+		self.edges_color = color
+		
+		for edge in self.edges:
+			edge.setColor(self.edges_color)
+	
+	def _draw_flowchart(self):
 		self.setScene(self.gscene)
 
 		# Parse SVG content
@@ -62,29 +81,6 @@ class GraphvizFlowchart(QGraphicsView):
 		self._draw_nodes(nodes)
 		self._draw_edges(edges)
 		self._draw_decision_nodes(decision_nodes)
-	
-	def wheelEvent(self, event):
-		factor = 1.1
-		if event.modifiers() == Qt.ControlModifier:
-			if event.angleDelta().y() < 0:
-				factor = 1.0 / factor
-			self.scale(factor, factor)
-		elif event.modifiers() == Qt.ShiftModifier:
-			delta = event.angleDelta().y()
-			self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() + int(delta))
-		else:
-			super().wheelEvent(event)
-	
-	def dark_mode(self, active:bool):
-		color = "#000000"
-
-		if active:
-			color = "#ffffff"
-		
-		self.edges_color = color
-		
-		for edge in self.edges:
-			edge.set_color(QColor(color))
 		
 	def _draw_edges(self, edges : list[ET.Element]):
 		
@@ -107,7 +103,7 @@ class GraphvizFlowchart(QGraphicsView):
 			if text is not None:
 				xml_text_str = ET.tostring(text, encoding='unicode')
 			
-			edge = GraphvizFlowchartEdge(self.viewbox[3], xml_path_str, xml_polygon_str, QColor(self.edges_color), xml_text_str)
+			edge = GraphvizFlowchartEdge(self.viewbox[3], xml_path_str, xml_polygon_str, self.edges_color, xml_text_str)
 			
 			self.gscene.addItem(edge)
 			self.edges.append(edge)
@@ -153,11 +149,11 @@ class GraphvizFlowchart(QGraphicsView):
 			self.gscene.addItem(node)
 
 			self.nodes[title.text] = node
-	
-	def set_opacity(self, opacity: float, node_id : str = None):
+
+	def setOpacity(self, opacity: float, node_id : str = None):
 		if not node_id:
 			for _, flowchart_item in self.nodes.items():
-				flowchart_item.item.setOpacity(opacity)
+				flowchart_item.setOpacity(opacity)
 		
 		else:
-			self.nodes[node_id].item.setOpacity(opacity)
+			self.nodes[node_id].setOpacity(opacity)
