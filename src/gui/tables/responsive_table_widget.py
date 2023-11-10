@@ -1,5 +1,4 @@
-from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QSizePolicy, QHeaderView, QVBoxLayout
-import json
+from PyQt6.QtWidgets import QTableWidget, QSizePolicy
 
 class ResponsiveTableWidget(QTableWidget):
     def __init__(self, rows, headers: list[str], parent=None):

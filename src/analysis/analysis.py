@@ -4,9 +4,7 @@ import re
 from time import time
 from typing import Any
 import pickle
-import threading
-import os
-import platform
+from threading import Lock
 
 from .workflow import Workflow
 
@@ -20,8 +18,8 @@ class Analysis:
 		self.executables : dict[str, dict[str, Any]] = {}
 
 		# locks both self.activity_log and self.executables resources
-		self.activity_log_lock = threading.Lock()
-		self.executables_lock = threading.Lock()
+		self.activity_log_lock = Lock()
+		self.executables_lock = Lock()
 	
 	def _update_active_tools(self):
 		current_time = time()

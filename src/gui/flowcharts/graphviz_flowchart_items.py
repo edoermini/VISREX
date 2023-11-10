@@ -1,4 +1,3 @@
-import typing
 from PyQt6.QtWidgets import QGraphicsItem, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsSceneContextMenuEvent, QGraphicsSceneHoverEvent, QGraphicsTextItem, QGraphicsItemGroup, QGraphicsPathItem
 from PyQt6.QtGui import QColor, QBrush, QPolygonF, QPen, QPainterPath, QFont
 from PyQt6.QtCore import Qt, QPointF, QPoint, pyqtSignal, QObject

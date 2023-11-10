@@ -1,6 +1,5 @@
 from PyQt6.QtWidgets import QLabel, QDialog, QPushButton, QVBoxLayout, QFileDialog, QHBoxLayout, QLineEdit
 import qdarktheme
-import sys
 
 
 class ChoseFileDialog(QDialog):

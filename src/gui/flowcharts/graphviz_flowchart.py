@@ -2,7 +2,7 @@
 import xml.etree.ElementTree as ET
 from graphviz import Digraph
 import io
-from PyQt6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsTextItem, QMenu
+from PyQt6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsTextItem
 from PyQt6.QtCore import Qt, QObject, pyqtSignal, QPoint
 from PyQt6.QtGui import QColor
 import xml.etree.ElementTree as ET

@@ -1,7 +1,5 @@
 from PyQt6.QtWidgets import QLabel, QDialog, QPushButton, QVBoxLayout, QHBoxLayout
-from PyQt6.QtCore import QCoreApplication
 import qdarktheme
-import sys
 
 
 class OpenDialog(QDialog):

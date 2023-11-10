@@ -1,6 +1,3 @@
-import json
-from typing import TextIO
-from io import IOBase
 from graphviz import Digraph
 
 class Workflow:

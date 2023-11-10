@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QThread, pyqtSignal, QThreadPool, QRunnable, QTimer
+from PyQt6.QtCore import QThread, pyqtSignal
 
 import platform
 import os

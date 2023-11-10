@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QTextEdit, QDialog, QVBoxLayout, QSplitter, QFileDialog, QHBoxLayout, QComboBox, QPushButton
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QTextOption, QFont, QAction
+from PyQt6.QtGui import QTextOption, QFont
 import binascii
 
 class HexViewer(QDialog):
