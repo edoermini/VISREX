@@ -5,10 +5,10 @@ import sys
 
 
 class OpenDialog(QDialog):
-    def __init__(self, dark_mode=False, parent=None):
+    def __init__(self, parent=None):
         super(OpenDialog, self).__init__(parent)
 
-        qdarktheme.setup_theme('dark' if dark_mode else 'light')
+        qdarktheme.setup_theme('auto')
 
         self.parent_window = parent
         self.initUI()

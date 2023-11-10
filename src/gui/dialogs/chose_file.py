@@ -4,10 +4,10 @@ import sys
 
 
 class ChoseFileDialog(QDialog):
-    def __init__(self, title, file_types, dark_mode=False, parent=None):
+    def __init__(self, title, file_types, parent=None):
         super(ChoseFileDialog, self).__init__(parent)
 
-        qdarktheme.setup_theme('dark' if dark_mode else 'light')
+        qdarktheme.setup_theme('auto')
         
         self.title = title
         self.file_types = file_types

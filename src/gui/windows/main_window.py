@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QMenu, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QTableWidgetItem, QFileDialog, QDialog, QLabel, QSpacerItem, QSizePolicy, QHBoxLayout
-from PyQt6.QtCore import Qt, QSize, QTimer, QThread, QMutex, QMutexLocker
-from PyQt6.QtGui import QColor, QMovie, QAction, QActionGroup
+from PyQt6.QtWidgets import QApplication, QMenu, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QTableWidgetItem, QFileDialog, QDialog, QLabel, QSpacerItem, QSizePolicy, QHBoxLayout
+from PyQt6.QtCore import Qt, QSize, QTimer, QThread
+from PyQt6.QtGui import QColor, QMovie, QAction, QActionGroup, QPalette
 import qtawesome as qta
 import qdarktheme
 import os
@@ -19,10 +19,9 @@ from gui.shared import StatusMessagesQueue
 from analysis import Analysis
 
 class MainWindow(QMainWindow):
-	def __init__(self, malware_sample=None, analysis_file=None, dark_mode=False):
+	def __init__(self, malware_sample=None, analysis_file=None):
 		super(MainWindow, self).__init__()
 
-		self.dark_mode = dark_mode
 		self.malware_sample = malware_sample
 		self.analysis_file = analysis_file
 		self.messages = StatusMessagesQueue()
@@ -37,7 +36,7 @@ class MainWindow(QMainWindow):
 				self.analysis = pickle.load(file)
 		
 		self.initUI()
-		self.setDarkMode(self.dark_mode)
+		self.setTheme('auto')
 
 	def initUI(self):
 		self.setWindowTitle("MASup (Malware Analysis Supporter)")
@@ -45,7 +44,7 @@ class MainWindow(QMainWindow):
 		# Creare un widget a pila per le diverse viste
 		stacked_widget = QStackedWidget()
 
-		self.progress_view = GraphvizFlowchart(self.analysis.workflow.dot_code(), QColor('#fffff') if self.dark_mode else QColor('#00000'))
+		self.progress_view = GraphvizFlowchart(self.analysis.workflow.dot_code(), QColor('#fffff') if self.isDarkThemeActive() else QColor('#00000'))
 		self.progress_view.signals.rightClick.connect(self.openFlowchartNodeContextMenu)
 		self.progress_view.setOpacity(0.2)
 
@@ -121,10 +120,27 @@ class MainWindow(QMainWindow):
 		view_menu.addAction(show_toolbar_action)
 
 		appearance_submenu = QMenu('Appearance', self)
-		dark_mode_action = QAction('Dark mode', self, checkable=True)
-		dark_mode_action.setChecked(False)
-		dark_mode_action.triggered.connect(self.setDarkMode)
-		appearance_submenu.addAction(dark_mode_action)
+		theme_menu = QMenu('Theme', self)
+
+		appearance_submenu.addMenu(theme_menu)
+
+		theme_action_group = QActionGroup(self)
+		theme_action_group.setExclusive(True)
+
+		self.dark_mode_action = QAction('Dark', self, checkable=True)
+		self.dark_mode_action.triggered.connect(partial(self.setTheme, 'dark'))
+		theme_action_group.addAction(self.dark_mode_action)
+		theme_menu.addAction(self.dark_mode_action)
+
+		self.light_mode_action = QAction('Light', self, checkable=True)
+		self.light_mode_action.triggered.connect(partial(self.setTheme, 'light'))
+		theme_action_group.addAction(self.light_mode_action)
+		theme_menu.addAction(self.light_mode_action)
+
+		self.system_mode_action = QAction('Auto', self, checkable=True)
+		self.system_mode_action.triggered.connect(partial(self.setTheme, 'auto'))
+		theme_action_group.addAction(self.system_mode_action)
+		theme_menu.addAction(self.system_mode_action)
 
 		view_menu.addMenu(appearance_submenu)
 
@@ -246,13 +262,20 @@ class MainWindow(QMainWindow):
 		self.activity_updater.stop()
 		event.accept()
 	
-	def setDarkMode(self, active):
+	def setTheme(self, theme:str):
+		
+		if theme == 'auto':
+			self.system_mode_action.setChecked(True)
+		elif theme == 'dark':
+			self.dark_mode_action.setChecked(True)
+		else: # theme == 'light'
+			self.light_mode_action.setChecked(True)
 
-		qdarktheme.setup_theme('dark' if active else 'light')
-		self.progress_view.setEdgesColor(QColor('#ffffff') if active else QColor('#000000'))
-		self.progress_page_button.setIcon(qta.icon("fa5s.tasks", color="white" if active else "black"))
-		self.activity_log_page_button.setIcon(qta.icon("fa5s.history", color="white" if active else "black"))
-		self.read_process_memory_button.setIcon(qta.icon("fa5s.syringe", color="white" if active else "black"))
+		qdarktheme.setup_theme(theme)
+		self.progress_view.setEdgesColor(QColor('#ffffff') if self.isDarkThemeActive() else QColor('#000000'))
+		self.progress_page_button.setIcon(qta.icon("fa5s.tasks", color="white" if self.isDarkThemeActive() else "black"))
+		self.activity_log_page_button.setIcon(qta.icon("fa5s.history", color="white" if self.isDarkThemeActive() else "black"))
+		self.read_process_memory_button.setIcon(qta.icon("fa5s.syringe", color="white" if self.isDarkThemeActive() else "black"))
 
 	def openFlowchartNodeContextMenu(self, node_id, mouse_pos):
 		context_menu = QMenu(self)
@@ -265,6 +288,17 @@ class MainWindow(QMainWindow):
 		dialog = OpenToolDialog(tools)
 		dialog.setMinimumWidth(200)
 		dialog.exec_()
+	
+	def isDarkThemeActive(self):
+
+		# Check the color role for the WindowText color
+		background_color = self.palette().color(self.backgroundRole())
+
+		# Calculate the overall brightness of the color
+		brightness = (background_color.red() * 299 + background_color.green() * 587 + background_color.blue() * 114) / 1000
+
+		# If the brightness is less than a threshold, consider it a dark theme
+		return brightness < 128
 
 	def close(self) -> bool:
 		return super().close()
