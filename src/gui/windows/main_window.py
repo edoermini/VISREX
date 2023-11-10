@@ -8,6 +8,8 @@ from datetime import datetime
 import pickle
 from time import time
 from functools import partial
+import subprocess
+import platform
 
 from gui.updaters import ActivityUpdater
 from gui.dialogs import ReadProcessMemoryDialog, OpenToolDialog
@@ -287,7 +289,19 @@ class MainWindow(QMainWindow):
 		tools = [tool for tool in self.analysis.workflow['workflow']['nodes'][node_id]['tools'] if tool in self.analysis.executables]
 		dialog = OpenToolDialog(tools)
 		dialog.setMinimumWidth(200)
-		dialog.exec_()
+		result = dialog.exec_()
+
+		if result == QDialog.Accepted:
+			tool = dialog.getSelected()
+			executable = self.analysis.executables[tool]['executable']
+
+			if self.analysis.workflow['tools'][tool]['nature'] == 'GUI' or self.analysis.workflow['tools'][tool]['nature'] == 'CLI-GUI':
+				subprocess.Popen(executable)
+			else:
+				if platform.system() == "Windows":
+					subprocess.Popen(["start", "cmd", "/k", executable], shell=True)
+				elif platform.system() == "Linux":
+					subprocess.Popen(["x-terminal-emulator", "-e", executable], shell=True)
 	
 	def isDarkThemeActive(self):
 

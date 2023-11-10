@@ -31,9 +31,7 @@ class Workflow:
 				"phase": "extraction",
 				"color": "#4051B5",
 				"results": [],
-				"tools": [
-				  "icesword"
-				]
+				"tools": []
 			  },
 			  "extr_2": {
 				"type": "activity",
@@ -206,7 +204,6 @@ class Workflow:
 				"tools": [
 				  "idapro",
 				  "ghidra",
-				  "reverseengineeringcompiler",
 				  "loadlib"
 				]
 			  },
@@ -307,25 +304,20 @@ class Workflow:
 				"results": [],
 				"tools": [
 				  	"gdiproc",
-					"memoryze",
 					"systracer",
 					"autoruns",
-					"floatnotmyfault",
 					"regshot",
 					"dirwatch",
 					"processhacker",
-					"snort",
 					"apatedns",
 					"spymetool",
 					"malcodeanalystpack",
 					"netcat",
-					"capturebot",
 					"psfile",
 					"processexplorer",
 					"wireshark",
 					"mailpot",
 					"sniffhit",
-					"honeyd",
 					"processmonitor"
 				]
 			  },
@@ -347,25 +339,20 @@ class Workflow:
 				"results": [],
 				"tools": [
 				  	"gdiproc",
-					"memoryze",
 					"systracer",
 					"autoruns",
-					"floatnotmyfault",
 					"regshot",
 					"dirwatch",
 					"processhacker",
-					"snort",
 					"apatedns",
 					"spymetool",
 					"malcodeanalystpack",
 					"netcat",
-					"capturebot",
 					"psfile",
 					"processexplorer",
 					"wireshark",
 					"mailpot",
 					"sniffhit",
-					"honeyd",
 					"processmonitor"
 				]
 			  },
@@ -379,10 +366,8 @@ class Workflow:
 				"activity_id": 3,
 				"results": [],
 				"tools": [
-				  "floatnotmyfault",
 				  "processmonitor",
 				  "processexplorer",
-				  "memoryze",
 				  "systracer",
 				  "processhacker",
 				  "autoruns",
@@ -414,11 +399,8 @@ class Workflow:
 				"results": [],
 				"tools": [
 				  "wireshark",
-				  "snort",
 				  "malcodeanalystpack",
 				  "netcat",
-				  "honeyd",
-				  "capturebot",
 				  "processexplorer",
 				  "systracer",
 				  "processmonitor",
@@ -642,139 +624,153 @@ class Workflow:
 			]
 		  },
 			"tools": {
-				"icesword": {
-					"regex": "(?i)^icesword(?:\\.exe)?"
-				},
 				"pestudio": {
-					"regex": "(?i)^pestudio(?:\\.exe)?"
+					"regex": r"(?i)^pestudio(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"ssdeep": {
-					"regex": "(?i)^ssdeep(?:\\.exe)?"
+					"regex": r"(?i)^ssdeep(?:\.exe)?",
+					"nature": "CLI"
 				},
 				"idapro": {
-					"regex": "(?i)^ida(?:pro)?(?:64)?(?:\\.exe)?"
+					"regex": r"(?i)^ida(?:pro)?(?:64)?(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"bintext": {
-					"regex": "(?i)^bintext(?:\\.exe)?"
+					"regex": r"(?i)^bintext(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"pebrowse": {
-					"regex": "(?i)^pebrowse(?:\\.exe)?"
+					"regex": r"(?i)^pebrowse(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"fileinsight": {
-					"regex": "(?i)^fileinsight(?:\\.exe)?"
+					"regex": r"(?i)^fileinsight(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"peid": {
-					"regex": "(?i)^peid(?:\\.exe)?"
+					"regex": r"(?i)^peid(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"die": {
-					"regex": "(?i)^die(?:\\.exe)?"
+					"regex": r"(?i)^die(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"binwalk": {
-					"regex": "(?i)^binwalk(?:\\.exe)?"
+					"regex": r"(?i)^binwalk(?:\.exe)?",
+					"nature": "CLI"
 				},
 				"yara": {
-					"regex": "(?i)^yara(?:\\.exe)?"
+					"regex": r"(?i)^yara(?:\.exe)?",
+					"nature": "CLI"
 				},
 				"winhex": {
-					"regex": "(?i)^winhex(?:\\.exe)?"
+					"regex": r"(?i)^winhex(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"peexplorer": {
-					"regex": "(?i)^peexplorer(?:\\.exe)?"
+					"regex": r"(?i)^pe(?:\\s)?explorer(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"procdump32": {
-					"regex": "(?i)^procdump32(?:\\.exe)?"
+					"regex": r"(?i)^procdump32(?:\.exe)?",
+					"nature": "CLI"
 				},
 				"scylla": {
-					"regex": "(?i)^scylla(?:\\.exe)?"
+					"regex": r"(?i)^scylla(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"ghidra": {
-					"regex": "(?i)^ghidra(?:\\.exe)?"
-				},
-				"reverseengineeringcompiler": {
-					"regex": "(?i)^reverseengineeringcompiler(?:\\.exe)?"
+					"regex": r"(?i)^ghidra(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"ollydbg": {
-					"regex": "(?i)^ollydbg(?:\\.exe)?"
+					"regex": r"(?i)^ollydbg(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"importreconstruction": {
-					"regex": "(?i)^importreconstruction(?:\\.exe)?"
-				},
-				"floatnotmyfault": {
-					"regex": "(?i)^floatnotmyfault(?:\\.exe)?"
+					"regex": r"(?i)^importreconstruction(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"processmonitor": {
-					"regex": "(?i)^proc(?:ess)?mon(?:itor)?(?:32|64)?(?:\\.exe)?"
+					"regex": r"(?i)^proc(?:ess)?mon(?:itor)?(?:32|64)?(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"processexplorer": {
-					"regex": "(?i)^processexplorer(?:\\.exe)?"
-				},
-				"memoryze": {
-					"regex": "(?i)^memoryze(?:\\.exe)?"
+					"regex": r"(?i)^process(?:\s)?explorer(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"systracer": {
-					"regex": "(?i)^systracer(?:\\.exe)?"
+					"regex": r"(?i)^systracer(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"processhacker": {
-					"regex": "(?i)^processhacker(?:\\.exe)?"
+					"regex": r"(?i)^processhacker(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"autoruns": {
-					"regex": "(?i)^autoruns(?:\\.exe)?"
+					"regex": r"(?i)^autoruns(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"spymetool": {
-					"regex": "(?i)^spymetool(?:\\.exe)?"
+					"regex": r"(?i)^spymetool(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"regshot": {
-					"regex": "(?i)^regshot(?:\\.exe)?"
+					"regex": r"(?i)^regshot(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"psfile": {
-					"regex": "(?i)^psfile(?:\\.exe)?"
+					"regex": r"(?i)^psfile(?:\.exe)?",
+					"nature": "CLI"
 				},
 				"wireshark": {
-					"regex": "(?i)^wireshark(?:\\.exe)?"
-				},
-				"snort": {
-					"regex": "(?i)^snort(?:\\.exe)?"
+					"regex": r"(?i)^wireshark(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"dirwatch": {
-					"regex": "(?i)^dirwatch(?:\\.exe)?"
+					"regex": r"(?i)^dirwatch(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"fakedns": {
-					"regex": "(?i)^fakedns(?:\\.exe)?"
+					"regex": r"(?i)^fakedns(?:\.exe)?",
+					"nature": "CLI-GUI"
 				},
 				"finddll": {
-					"regex": "(?i)^finddll(?:\\.exe)?"
+					"regex": r"(?i)^finddll(?:\.exe)?",
+					"nature": "CLI"
 				},
 				"mailpot": {
-					"regex": "(?i)^mailpot(?:\\.exe)?"
+					"regex": r"(?i)^mailpot(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"sniffhit": {
-					"regex": "(?i)^sniffhit(?:\\.exe)?"
+					"regex": r"(?i)^sniffhit(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"icddumpfix": {
-					"regex": "(?i)^icddumpfix(?:\\.exe)?"
+					"regex": r"(?i)^icddumpfix(?:\.exe)?",
+					"nature": "GUI"
 				},
 				"gdiproc": {
-					"regex": "(?i)^gdiproc(?:\\.exe)?"
+					"regex": r"(?i)^gdiproc(?:\.exe)?",
+					"nature": "CLI"
 				},
 				"loadlib": {
-					"regex": "(?i)^loadlib(?:\\.exe)?"
+					"regex": r"(?i)^loadlib(?:\.exe)?",
+					"nature": "CLI"
 				},
 				"netcat": {
-					"regex": "(?i)^netcat(?:\\.exe)?"
-				},
-				"honeyd": {
-					"regex": "(?i)^honeyd(?:\\.exe)?"
-				},
-				"capturebot": {
-					"regex": "(?i)^capturebot(?:\\.exe)?"
+					"regex": r"(?i)^netcat(?:\.exe)?",
+					"nature": "CLI"
 				},
 				"apatedns": {
-					"regex": "(?i)^apatedns(?:\\.exe)?"
+					"regex": r"(?i)^apatedns(?:\.exe)?",
+					"nature": "GUI"
 				}
 			}
 
 		}
-		
 		self._check_structure()
 
 		if malware_executable:

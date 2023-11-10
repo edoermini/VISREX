@@ -46,4 +46,6 @@ class OpenToolDialog(QDialog):
     
     def openClicked(self):
         self.accept()
-        print("open tool", self.combo_box.currentText())
+    
+    def getSelected(self):
+        return self.combo_box.currentText()
