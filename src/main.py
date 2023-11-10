@@ -1,12 +1,9 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QDialog
-from PyQt5.QtCore import Qt
+from PyQt6.QtWidgets import QApplication, QDialog
 from gui.windows import MainWindow
 from gui.dialogs import OpenDialog, ChoseFileDialog
 
 if __name__ == '__main__':
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    
     app = QApplication(sys.argv)
 
     malware_sample = None

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QPushButton, QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit, QMessageBox
+from PyQt6.QtWidgets import QDialog, QPushButton, QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit, QMessageBox
 
 from masup.modules.processes import Process
 from gui.dialogs.hex_viewer import HexViewer

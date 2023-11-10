@@ -1,11 +1,6 @@
-darkdetect==0.7.1
-packaging==23.2
 psutil==5.9.6
-PyQt5==5.15.10
-PyQt5-Qt5==5.15.2
-PyQt5-sip==12.13.0
+PyQt6==6.6.0
 pyqtdarktheme==2.1.0
 QtAwesome==1.2.3
-QtPy==2.4.1
 rpaframework==27.4.1
 Pymem==1.13.0

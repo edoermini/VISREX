@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QLabel, QDialog, QPushButton, QVBoxLayout, QHBoxLayout
-from PyQt5.QtCore import QCoreApplication
+from PyQt6.QtWidgets import QLabel, QDialog, QPushButton, QVBoxLayout, QHBoxLayout
+from PyQt6.QtCore import QCoreApplication
 import qdarktheme
 import sys
 

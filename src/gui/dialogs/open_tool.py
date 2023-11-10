@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QComboBox, QPushButton
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QComboBox, QPushButton, QHBoxLayout
 
 
 class OpenToolDialog(QDialog):
@@ -17,17 +17,33 @@ class OpenToolDialog(QDialog):
         layout.addWidget(label)
 
         # Add a dropdown menu
-        combo_box = QComboBox()
+        self.combo_box = QComboBox()
 
         for tool in self.tools:
-            combo_box.addItem(tool)
+            self.combo_box.addItem(tool)
         
-        layout.addWidget(combo_box)
+        layout.addWidget(self.combo_box)
 
+        buttons_layout = QHBoxLayout()
         # Add a button to close the dialog
-        close_button = QPushButton('Close Dialog')
-        close_button.clicked.connect(self.accept)
-        layout.addWidget(close_button)
+        close_button = QPushButton('Close')
+        close_button.clicked.connect(self.closeClicked)
+
+        open_button = QPushButton('Open')
+        open_button.clicked.connect(self.openClicked)
+
+        buttons_layout.addWidget(close_button)
+        buttons_layout.addWidget(open_button)
+
+        layout.addLayout(buttons_layout)
 
         # Set the layout for the dialog
         self.setLayout(layout)
+    
+    def closeClicked(self):
+        self.accept()
+        self.setResult(QDialog.Rejected)
+    
+    def openClicked(self):
+        self.accept()
+        print("open tool", self.combo_box.currentText())

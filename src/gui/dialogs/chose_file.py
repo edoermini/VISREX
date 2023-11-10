@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QLabel, QDialog, QPushButton, QVBoxLayout, QFileDialog, QHBoxLayout, QLineEdit
+from PyQt6.QtWidgets import QLabel, QDialog, QPushButton, QVBoxLayout, QFileDialog, QHBoxLayout, QLineEdit
 import qdarktheme
 import sys
 

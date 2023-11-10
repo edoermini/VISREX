@@ -1,7 +1,7 @@
 import typing
-from PyQt5.QtWidgets import QGraphicsItem, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsSceneContextMenuEvent, QGraphicsSceneHoverEvent, QGraphicsTextItem, QGraphicsItemGroup, QGraphicsPathItem
-from PyQt5.QtGui import QColor, QBrush, QPolygonF, QPen, QPainterPath, QFont
-from PyQt5.QtCore import Qt, QPointF, QPoint, pyqtSignal, QObject
+from PyQt6.QtWidgets import QGraphicsItem, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsSceneContextMenuEvent, QGraphicsSceneHoverEvent, QGraphicsTextItem, QGraphicsItemGroup, QGraphicsPathItem
+from PyQt6.QtGui import QColor, QBrush, QPolygonF, QPen, QPainterPath, QFont
+from PyQt6.QtCore import Qt, QPointF, QPoint, pyqtSignal, QObject
 
 import xml.etree.ElementTree as ET
 import re

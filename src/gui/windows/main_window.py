@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QMenu, QActionGroup, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QAction, QTableWidgetItem, QFileDialog, QDialog
-from PyQt5.QtCore import Qt, QEventLoop
-from PyQt5.QtGui import QColor
+from PyQt6.QtWidgets import QMenu, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QTableWidgetItem, QFileDialog, QDialog, QLabel, QSpacerItem, QSizePolicy, QHBoxLayout
+from PyQt6.QtCore import Qt, QSize, QTimer, QThread, QMutex, QMutexLocker
+from PyQt6.QtGui import QColor, QMovie, QAction, QActionGroup
 import qtawesome as qta
 import qdarktheme
 import os
@@ -8,14 +8,13 @@ from datetime import datetime
 import pickle
 from time import time
 from functools import partial
-import re
-import platform
 
 from gui.updaters import ActivityUpdater
 from gui.dialogs import ReadProcessMemoryDialog, OpenToolDialog
 from gui.flowcharts import GraphvizFlowchart
 from gui.tables import ResponsiveTableWidget
 from gui.threads import ExecutablesUpdaterThread
+from gui.shared import StatusMessagesQueue
 
 from analysis import Analysis
 
@@ -26,7 +25,7 @@ class MainWindow(QMainWindow):
 		self.dark_mode = dark_mode
 		self.malware_sample = malware_sample
 		self.analysis_file = analysis_file
-		self.executable_find_started = False
+		self.messages = StatusMessagesQueue()
 		self.analysis = None
 
 		if self.malware_sample is not None:
@@ -131,7 +130,7 @@ class MainWindow(QMainWindow):
 
 		options_menu = menubar.addMenu('Options')
 		update_tools_exec_action = QAction('Update tools executables', self)
-		update_tools_exec_action.triggered.connect(self.executables_finder_thread_start)
+		update_tools_exec_action.triggered.connect(self.executablesFinderStart)
 		options_menu.addAction(update_tools_exec_action)
 
 
@@ -145,13 +144,43 @@ class MainWindow(QMainWindow):
 		# Impostare il widget principale come widget centrale della finestra principale
 		self.setCentralWidget(main_widget)
 
-		self.activity_updater = ActivityUpdater(self.analysis, 500)
-		self.activity_updater.dataUpdated.connect(self.update_progress)
+		self.spinner_label = QLabel(self)
+		self.spinner_label.setFixedSize(25, 25)
+		self.spinner_movie = QMovie(os.path.abspath("gui/assets/loading.gif"))
+		self.spinner_movie.setScaledSize(QSize(20, 20))
+		self.spinner_label.setMovie(self.spinner_movie)
+		self.spinner_movie.start()
+		self.spinner_label.hide()
 
-		self.executables_finder_thread = ExecutablesUpdaterThread(self.analysis)
-		self.executables_finder_thread_start()
+		self.statusBar().addPermanentWidget(self.spinner_label)
+
+		self.timer = QTimer(self)
+		self.timer.timeout.connect(self.updateStatus)
+		self.timer.start(2000)  # Switch messages every 2000 milliseconds
+
+		self.activity_updater = ActivityUpdater(self.analysis, 500)
+		self.activity_updater.dataUpdated.connect(self.updateProgress)
+
+		self.executablesFinderStart()
 	
-	def update_progress(self):
+	def updateStatus(self):
+		# Display the next message in the list
+
+		message = self.messages.get_message_rotation()
+
+		if message is None:
+			if not self.spinner_label.isHidden():
+				self.spinner_label.hide()
+				self.statusBar().clearMessage()
+			
+			return
+		
+		if self.spinner_label.isHidden():
+			self.spinner_label.show()
+
+		self.statusBar().showMessage(message)
+		
+	def updateProgress(self):
 		self.analysis.update_activities()
 
 		for node_id in self.analysis.activities:
@@ -168,16 +197,16 @@ class MainWindow(QMainWindow):
 				item = QTableWidgetItem(value)
 				self.activity_log_table.setItem(row, col, item)
 
-	def executables_finder_thread_start(self):
-		if not self.executable_find_started:
-			self.setStatusTip('Update executables task started')
-			self.executable_find_started = True
-			self.executables_finder_thread.finished.connect(self.executables_finder_thread_finish)
-			self.executables_finder_thread.start()
+	def executablesFinderStart(self):
+		message_index = self.messages.add('Looking for executables')
 
-	def executables_finder_thread_finish(self):
-		self.executable_find_started = False
-		self.setStatusTip('Update executables task finished')
+		executables_finder_thread = ExecutablesUpdaterThread(self.analysis)
+		executables_finder_thread.finished.connect(partial(self.executablesFinderFinish, message_index, executables_finder_thread))
+		executables_finder_thread.start()
+
+	def executablesFinderFinish(self, message_index:int, thread:QThread):
+		self.messages.remove(message_index)
+		thread.terminate()
 
 	def saveFile(self):
 
@@ -234,6 +263,7 @@ class MainWindow(QMainWindow):
 	def openTool(self, node_id):
 		tools = [tool for tool in self.analysis.workflow['workflow']['nodes'][node_id]['tools'] if tool in self.analysis.executables]
 		dialog = OpenToolDialog(tools)
+		dialog.setMinimumWidth(200)
 		dialog.exec_()
 
 	def close(self) -> bool:
