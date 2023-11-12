@@ -39,5 +39,5 @@ class ActivityUpdateTask(QRunnable):
 		self.result_callback = result_callback
 
 	def run(self):
-		self.analysis.update_activities()
+		self.analysis.update()
 		self.result_callback.emit()

@@ -11,11 +11,10 @@ from functools import partial
 import subprocess
 import platform
 
-from gui.updaters import ActivityUpdater
+from gui.updaters import ActivityUpdater, ExecutablesUpdater
 from gui.dialogs import ReadProcessMemoryDialog, OpenToolDialog
 from gui.flowcharts import GraphvizFlowchart
 from gui.tables import ResponsiveTableWidget
-from gui.threads import ExecutablesUpdaterThread
 from gui.shared import StatusMessagesQueue
 
 from analysis import Analysis
@@ -56,7 +55,7 @@ class MainWindow(QMainWindow):
 		flowchart_page_layout.addWidget(self.flowchart)
 
 		# activity log page
-		self.activity_log_table = ResponsiveTableWidget(0, ['Time', 'Activity', 'Tool', 'Executable', 'Arguments'], self)
+		self.activity_log_table = ResponsiveTableWidget(0, [], self)
 		activity_log_page = QWidget()
 		activity_log_page_layout = QVBoxLayout(activity_log_page)
 		activity_log_page_layout.addWidget(self.activity_log_table)
@@ -188,7 +187,7 @@ class MainWindow(QMainWindow):
 		self.timer.start(2000)  # Switch messages every 2000 milliseconds
 
 		self.activity_updater = ActivityUpdater(self.analysis)
-		self.activity_updater.dataUpdated.connect(self.updateProgress)
+		self.activity_updater.dataUpdated.connect(self.updateAnalysisProgress)
 		self.activity_updater.start(500)
 
 		self.executablesFinderStart()
@@ -210,17 +209,21 @@ class MainWindow(QMainWindow):
 
 		self.statusBar().showMessage(message)
 		
-	def updateProgress(self):
-
+	def updateAnalysisProgress(self):
+		
 		for node_id in self.analysis.activities:
 			self.flowchart.setOpacity(1, node_id)
 		
-		for row, log in enumerate(self.analysis.activity_log):
+		for row, log_entry in enumerate(self.analysis.get_activity_log()):
+			column_count = len(log_entry)
+			columns = list(log_entry.values())
 
 			if row == self.activity_log_table.rowCount():
 				self.activity_log_table.insertRow(row)
 			
-			columns = [datetime.fromtimestamp(log['time']).isoformat(), log['activity'], log['tool'], log['executable'], ' '.join(log['arguments'])]
+			if column_count > self.activity_log_table.columnCount():
+				self.activity_log_table.setColumnCount(column_count)
+				self.activity_log_table.setHorizontalHeaderLabels(log_entry.keys())
 
 			for col, value in enumerate(columns):
 				item = QTableWidgetItem(value)
@@ -229,7 +232,7 @@ class MainWindow(QMainWindow):
 	def executablesFinderStart(self):
 		message_index = self.messages.add('Looking for executables')
 
-		executables_finder_thread = ExecutablesUpdaterThread(self.analysis)
+		executables_finder_thread = ExecutablesUpdater(self.analysis)
 		executables_finder_thread.finished.connect(partial(self.executablesFinderFinish, message_index, executables_finder_thread))
 		executables_finder_thread.start()
 
@@ -300,14 +303,16 @@ class MainWindow(QMainWindow):
 		context_menu.exec_(mouse_pos)
 	
 	def openTool(self, node_id):
-		tools = [tool for tool in self.analysis.workflow['workflow']['nodes'][node_id]['tools'] if tool in self.analysis.executables]
+		executables = self.analysis.get_executables()
+
+		tools = [tool for tool in self.analysis.workflow['workflow']['nodes'][node_id]['tools'] if tool in executables]
 		dialog = OpenToolDialog(tools)
 		dialog.setMinimumWidth(200)
 		result = dialog.exec_()
 
 		if result == QDialog.Accepted:
 			tool = dialog.getSelected()
-			executable = self.analysis.executables[tool]['executable']
+			executable = executables[tool]
 
 			if self.analysis.workflow['tools'][tool]['nature'] == 'GUI' or self.analysis.workflow['tools'][tool]['nature'] == 'CLI-GUI':
 				subprocess.Popen(executable)

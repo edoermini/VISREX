@@ -1,1 +1,2 @@
 from .activity_updater import ActivityUpdater
+from .executables_updater import ExecutablesUpdater

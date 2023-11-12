@@ -1,12 +1,11 @@
 from PyQt6.QtWidgets import QGraphicsItem, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsSceneContextMenuEvent, QGraphicsSceneHoverEvent, QGraphicsTextItem, QGraphicsItemGroup, QGraphicsPathItem
 from PyQt6.QtGui import QColor, QBrush, QPolygonF, QPen, QPainterPath, QFont
-from PyQt6.QtCore import Qt, QPointF, QPoint, pyqtSignal, QObject
+from PyQt6.QtCore import Qt, QPointF
 
 import xml.etree.ElementTree as ET
 import re
 
-class GraphvizFlowchartNodeSignals(QObject):
-	rightClick = pyqtSignal(str, QPoint)
+from .signals import GraphvizFlowchartNodeSignals
 
 class GraphvizFlowchartItem(QGraphicsItemGroup):
 	def __init__(self,flowchart_height:float, xml_text:str = "", parent: QGraphicsItem = None):
@@ -57,9 +56,9 @@ class GraphvizFlowchartItem(QGraphicsItemGroup):
 
 		# Choose the text color based on the luminance
 		if luminance > 128 or alpha < 128:
-			return QColor(Qt.black)
+			return Qt.black
 		else:
-			return QColor(Qt.white)
+			return Qt.white
 		
 class GraphvizFlowchartEdge(GraphvizFlowchartItem):
 	def __init__(self, flowchart_height:float, xml_path: str, xml_polygon: str, color:QColor, xml_text:str = "", parent: QGraphicsItem = None):

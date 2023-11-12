@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QDialog, QPushButton, QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit, QMessageBox
 
 from masup.modules.processes import Process
-from gui.dialogs.hex_viewer import HexViewer
+from .hex_viewer_dialog import HexViewer
 import pymem.exception
 
 class ReadProcessMemoryDialog(QDialog):

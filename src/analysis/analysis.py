@@ -1,30 +1,33 @@
-import time
 import psutil
 import re
 from time import time
 from typing import Any
 import pickle
 from threading import Lock
+from datetime import datetime
+from time import time
+from collections import OrderedDict
 
 from .workflow import Workflow
 
 class Analysis:
 	def __init__(self, malware_sample:str=""):
 		self.workflow = Workflow(malware_sample)
-		self.activities : dict[str, str] = {}
+		self.activities : dict[str, Any] = {}
 		self.active_tools : set[str] = set([])
 		
-		self.activity_log : list[dict[str, Any]] = []
-		self.executables : dict[str, dict[str, Any]] = {}
+		self.activity_log : list[OrderedDict[str, str]] = []
+		self.executables : dict[str, str] = {}
+		self.arguments : dict[str, str] = {}
 
 		# locks both self.activity_log and self.executables resources
 		self.activity_log_lock = Lock()
 		self.executables_lock = Lock()
 	
 	def _update_active_tools(self):
-		current_time = time()
 
-		new_active_tools = set()
+		old_active_tools = self.active_tools.copy()
+		self.active_tools = set()
 
 		pids = psutil.pids()
 
@@ -44,42 +47,47 @@ class Analysis:
 
 			for tool_name, tool in self.workflow['tools'].items():
 				if re.match(tool['regex'], process_name):
-					new_active_tools.add(tool_name)
+					self.active_tools.add(tool_name)
+					
 					if executable:
 						self.update_executable(tool_name, executable)
 					
-					if arguments:
-						self.update_executable_arguments(tool_name, arguments)
+					if tool_name not in arguments:
+						if arguments:
+							self.arguments[tool_name] = ','.join(arguments)
+						else:
+							self.arguments[tool_name] = ""
+		
+		return old_active_tools
 
-		closed_tools = self.active_tools - new_active_tools
-		opened_tools = new_active_tools - self.active_tools
+	def _update_activity_log(self, current_time:int, old_active_tools:set, new_active_tools:set):
+		
+		log_time = datetime.fromtimestamp(current_time).isoformat()
 
-		log_entries = [
-			{
-				"time": current_time,
+		closed_tools = list(old_active_tools - new_active_tools)
+		opened_tools = list(new_active_tools - old_active_tools)
+		
+		log_entries = []
+		
+		for i, tool in enumerate(closed_tools + opened_tools):
+			activity = "Close tool"
+			arguments = self.arguments[tool]
+
+			if len(closed_tools) == 0 or i > len(closed_tools):
+				activity = "Open tool"
+				self.arguments.pop(tool)
+			
+			log_entries.append(OrderedDict({
+				"time": log_time,
 				"tool": tool,
-				"activity": "Close tool",
-				**self.executables[tool],
-
-			} for tool in closed_tools
-		] + [
-			{
-				"time": current_time,
-				"tool": tool,
-				"activity": "Open tool",
-				**self.executables[tool]
-			} for tool in opened_tools
-		]
+				"activity": activity,
+				"executable": self.executables[tool],
+				"arguments": arguments
+			}))
 
 		self.update_activity_log(log_entries)
 
-		self.active_tools = new_active_tools
-
-	def update_activities(self):
-		self._update_active_tools()
-
-		current_time = time()
-
+	def _update_activities(self, current_time:int):
 		updated_activities = set()
 
 		for node_id, node in self.workflow['workflow']['nodes'].items():
@@ -90,7 +98,6 @@ class Analysis:
 					self.activities[node_id] = {
 						'start_time': current_time,
 						'active': True,
-						**node  # Copy other attributes from the node
 					}
 
 		for node_id, activity in list(self.activities.items()):
@@ -100,28 +107,38 @@ class Analysis:
 					'stop_time': current_time - activity['start_time']
 				})
 
+	def update(self):
+		current_time = time()
+
+		old_active_tools = self._update_active_tools()
+		self._update_activity_log(current_time, old_active_tools, self.active_tools)
+		self._update_activities(current_time)
+
 	def export_analysis(self, file_path:str):
 		with open(file_path, "wb") as file:
 			pickle.dump(self, file)
 
-	def update_activity_log(self, data:list[dict[str, Any]]):
+	def update_activity_log(self, data:list[OrderedDict[str, str]]):
 		with self.activity_log_lock:
 			self.activity_log.extend(data)
 	
 	def update_executable(self, tool_name:str, executable:str):
 		with self.executables_lock:
-			if tool_name in self.executables:
-				self.executables[tool_name]['executable'] = executable
-			
-			else:
-				self.executables[tool_name] = {
-					'executable': executable,
-					'arguments': []
-				}
+			self.executables[tool_name] = executable
 	
-	def update_executable_arguments(self, tool_name:str, arguments:list[str]):
+	def get_executables(self):
+		executables = {}
+
 		with self.executables_lock:
-			if tool_name not in self.executables:
-				return
-			
-			self.executables[tool_name]['arguments'] = arguments
+			executables = self.executables.copy()
+		
+		return executables
+
+	def get_activity_log(self):
+		log = []
+
+		with self.activity_log_lock:
+			for log_entry in self.activity_log:
+				log.append(log_entry.copy())
+		
+		return log

@@ -6,7 +6,7 @@ import re
 
 from analysis import Analysis
 
-class ExecutablesUpdaterThread(QThread):
+class ExecutablesUpdater(QThread):
 	finished = pyqtSignal()
 
 	def __init__(self, analysis:Analysis):

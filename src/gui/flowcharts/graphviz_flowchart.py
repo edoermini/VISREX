@@ -3,16 +3,12 @@ import xml.etree.ElementTree as ET
 from graphviz import Digraph
 import io
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsTextItem
-from PyQt6.QtCore import Qt, QObject, pyqtSignal, QPoint
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 import xml.etree.ElementTree as ET
-import re
-
 
 from .graphviz_flowchart_items import GraphvizFlowchartEdge, GraphvizFlowchartDecision, GraphvizFlowchartProcess
-
-class GraphzivFlowchartSignals(QObject):
-	rightClick = pyqtSignal(str, QPoint)
+from .signals import GraphzivFlowchartSignals
 
 class GraphvizFlowchart(QGraphicsView):
 	def __init__(self, dot:Digraph, edges_color:QColor = Qt.black, parent = None):

@@ -134,7 +134,8 @@ class Workflow:
 				  "pebrowse",
 				  "winhex",
 				  "peexplorer",
-				  "procdump32"
+				  "procdump32",
+				  "upx"
 				]
 			  },
 			  "unpk_3": {
@@ -291,7 +292,7 @@ class Workflow:
 				"color":"#9C27B0",
 				"results": [],
 				"tools": [
-				  "importreconstruction",
+				  "importreconstructor",
 				  "icddumpfix"
 				]
 			  },
@@ -680,6 +681,10 @@ class Workflow:
 					"regex": r"(?i)^scylla(?:\.exe)?",
 					"nature": "GUI"
 				},
+				"upx": {
+					"regex": r"(?i)^upx(?:\.exe)?",
+					"nature": "CLI"
+				},
 				"ghidra": {
 					"regex": r"(?i)^ghidra(?:\.exe)?",
 					"nature": "GUI"
@@ -688,8 +693,8 @@ class Workflow:
 					"regex": r"(?i)^ollydbg(?:\.exe)?",
 					"nature": "GUI"
 				},
-				"importreconstruction": {
-					"regex": r"(?i)^importreconstruction(?:\.exe)?",
+				"importreconstructor": {
+					"regex": r"(?i)^imp(?:ort)?rec(?:onstructor)?(?:\.exe)?",
 					"nature": "GUI"
 				},
 				"processmonitor": {
