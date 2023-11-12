@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QApplication, QMenu, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QTableWidgetItem, QFileDialog, QDialog, QLabel
+from PyQt6.QtWidgets import QMenu, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QTableWidgetItem, QFileDialog, QDialog, QLabel
 from PyQt6.QtCore import Qt, QSize, QTimer, QThread
-from PyQt6.QtGui import QColor, QMovie, QAction, QActionGroup
+from PyQt6.QtGui import QMovie, QAction, QActionGroup
 import qtawesome as qta
 import qdarktheme
 import os

@@ -2,9 +2,9 @@ from PyQt6.QtWidgets import QLabel, QDialog, QPushButton, QVBoxLayout, QHBoxLayo
 import qdarktheme
 
 
-class OpenDialog(QDialog):
+class MainDialog(QDialog):
     def __init__(self, parent=None):
-        super(OpenDialog, self).__init__(parent)
+        super(MainDialog, self).__init__(parent)
 
         qdarktheme.setup_theme('auto')
 
