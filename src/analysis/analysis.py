@@ -45,8 +45,11 @@ class Analysis:
 			for tool_name, tool in self.workflow['tools'].items():
 				if re.match(tool['regex'], process_name):
 					new_active_tools.add(tool_name)
-					self.update_executable(tool_name, executable)
-					self.update_executable_arguments(tool_name, arguments)
+					if executable:
+						self.update_executable(tool_name, executable)
+					
+					if arguments:
+						self.update_executable_arguments(tool_name, arguments)
 
 		closed_tools = self.active_tools - new_active_tools
 		opened_tools = new_active_tools - self.active_tools

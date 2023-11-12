@@ -15,7 +15,7 @@ class GraphzivFlowchartSignals(QObject):
 	rightClick = pyqtSignal(str, QPoint)
 
 class GraphvizFlowchart(QGraphicsView):
-	def __init__(self, dot:Digraph, edges_color:QColor = QColor("#00000"), parent = None):
+	def __init__(self, dot:Digraph, edges_color:QColor = Qt.black, parent = None):
 		super().__init__(parent=parent)
 
 		self.signals = GraphzivFlowchartSignals()

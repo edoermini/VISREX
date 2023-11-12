@@ -46,22 +46,27 @@ class MainWindow(QMainWindow):
 		# Creare un widget a pila per le diverse viste
 		stacked_widget = QStackedWidget()
 
-		self.progress_view = GraphvizFlowchart(self.analysis.workflow.dot_code(), QColor('#fffff') if self.isDarkThemeActive() else QColor('#00000'))
-		self.progress_view.signals.rightClick.connect(self.openFlowchartNodeContextMenu)
-		self.progress_view.setOpacity(0.2)
+		# flowchart page
+		self.flowchart = GraphvizFlowchart(self.analysis.workflow.dot_code(), Qt.white if self.isDarkThemeActive() else Qt.black)
+		self.flowchart.signals.rightClick.connect(self.openFlowchartNodeContextMenu)
+		self.flowchart.setOpacity(0.2)
 
-		progress_page = QWidget()
-		progress_page_layout = QVBoxLayout(progress_page)
-		progress_page_layout.addWidget(self.progress_view)
-		stacked_widget.addWidget(progress_page)
+		flowchart_page = QWidget()
+		flowchart_page_layout = QVBoxLayout(flowchart_page)
+		flowchart_page_layout.addWidget(self.flowchart)
 
+		# activity log page
 		self.activity_log_table = ResponsiveTableWidget(0, ['Time', 'Activity', 'Tool', 'Executable', 'Arguments'], self)
 		activity_log_page = QWidget()
 		activity_log_page_layout = QVBoxLayout(activity_log_page)
 		activity_log_page_layout.addWidget(self.activity_log_table)
+
+		stacked_widget.addWidget(flowchart_page)
 		stacked_widget.addWidget(activity_log_page)
 
 		self.setCentralWidget(stacked_widget)
+
+		# toolbar
 
 		self.toolbar = QToolBar("Toolbar", self)
 		self.toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
@@ -90,8 +95,12 @@ class MainWindow(QMainWindow):
 		self.read_process_memory_button = QAction(qta.icon("fa5s.syringe"), "Read process memory", self)
 		self.read_process_memory_button.triggered.connect(self.readProcessMemory)
 		self.read_process_memory_button.setCheckable(False)
-		toolbar_actions.addAction(self.read_process_memory_button)
 		self.toolbar.addAction(self.read_process_memory_button)
+
+		self.unpack_button = QAction(qta.icon("fa5s.box-open"), "Unpack", self)
+		self.unpack_button.triggered.connect(self.unpack)
+		self.unpack_button.setCheckable(False)
+		self.toolbar.addAction(self.unpack_button)
 
 		self.setStatusBar(QStatusBar(self))
 
@@ -162,6 +171,8 @@ class MainWindow(QMainWindow):
 		# Impostare il widget principale come widget centrale della finestra principale
 		self.setCentralWidget(main_widget)
 
+		# status bar 
+
 		self.spinner_label = QLabel(self)
 		self.spinner_label.setFixedSize(25, 25)
 		self.spinner_movie = QMovie(os.path.abspath("gui/assets/loading.gif"))
@@ -176,8 +187,9 @@ class MainWindow(QMainWindow):
 		self.timer.timeout.connect(self.updateStatus)
 		self.timer.start(2000)  # Switch messages every 2000 milliseconds
 
-		self.activity_updater = ActivityUpdater(self.analysis, 500)
+		self.activity_updater = ActivityUpdater(self.analysis)
 		self.activity_updater.dataUpdated.connect(self.updateProgress)
+		self.activity_updater.start(500)
 
 		self.executablesFinderStart()
 	
@@ -199,10 +211,9 @@ class MainWindow(QMainWindow):
 		self.statusBar().showMessage(message)
 		
 	def updateProgress(self):
-		self.analysis.update_activities()
 
 		for node_id in self.analysis.activities:
-			self.progress_view.setOpacity(1, node_id)
+			self.flowchart.setOpacity(1, node_id)
 		
 		for row, log in enumerate(self.analysis.activity_log):
 
@@ -259,6 +270,9 @@ class MainWindow(QMainWindow):
 				"executable":"", 
 				"arguments":[f"{read_process_memory.getProcessName()}, {read_process_memory.getStartAddress()}, {read_process_memory.getBytesLength()}",]
 			}])
+		
+	def unpack(self):
+		print('unpacking...')
 
 	def closeEvent(self, event):
 		self.activity_updater.stop()
@@ -274,7 +288,7 @@ class MainWindow(QMainWindow):
 			self.light_mode_action.setChecked(True)
 
 		qdarktheme.setup_theme(theme)
-		self.progress_view.setEdgesColor(QColor('#ffffff') if self.isDarkThemeActive() else QColor('#000000'))
+		self.flowchart.setEdgesColor(Qt.white if self.isDarkThemeActive() else Qt.black)
 		self.progress_page_button.setIcon(qta.icon("fa5s.tasks", color="white" if self.isDarkThemeActive() else "black"))
 		self.activity_log_page_button.setIcon(qta.icon("fa5s.history", color="white" if self.isDarkThemeActive() else "black"))
 		self.read_process_memory_button.setIcon(qta.icon("fa5s.syringe", color="white" if self.isDarkThemeActive() else "black"))
@@ -299,9 +313,9 @@ class MainWindow(QMainWindow):
 				subprocess.Popen(executable)
 			else:
 				if platform.system() == "Windows":
-					subprocess.Popen(["start", "cmd", "/k", executable], shell=True)
+					subprocess.Popen(["start", "cmd", "/k", executable], shell=True, close_fds=True, start_new_session=True)
 				elif platform.system() == "Linux":
-					subprocess.Popen(["x-terminal-emulator", "-e", executable], shell=True)
+					subprocess.Popen(["x-terminal-emulator", "-e", executable], shell=True, close_fds=True, start_new_session=True)
 	
 	def isDarkThemeActive(self):
 
