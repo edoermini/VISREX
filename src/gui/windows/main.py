@@ -4,7 +4,6 @@ from PyQt6.QtGui import QMovie, QAction, QActionGroup
 import qtawesome as qta
 import qdarktheme
 import os
-from datetime import datetime
 import pickle
 from time import time
 from functools import partial
@@ -91,12 +90,12 @@ class MainWindow(QMainWindow):
 
 		self.toolbar.addSeparator()
 
-		self.read_process_memory_button = QAction(qta.icon("fa5s.syringe"), "Read process memory", self)
+		self.read_process_memory_button = QAction(qta.icon("fa5s.syringe", color="white" if self.isDarkThemeActive() else "black"), "Read process memory", self)
 		self.read_process_memory_button.triggered.connect(self.readProcessMemory)
 		self.read_process_memory_button.setCheckable(False)
 		self.toolbar.addAction(self.read_process_memory_button)
 
-		self.unpack_button = QAction(qta.icon("fa5s.box-open"), "Unpack", self)
+		self.unpack_button = QAction(qta.icon("fa5s.box-open", color="white" if self.isDarkThemeActive() else "black"), "Unpack", self)
 		self.unpack_button.triggered.connect(self.unpack)
 		self.unpack_button.setCheckable(False)
 		self.toolbar.addAction(self.unpack_button)
@@ -293,6 +292,7 @@ class MainWindow(QMainWindow):
 		qdarktheme.setup_theme(theme)
 		self.flowchart.setEdgesColor(Qt.white if self.isDarkThemeActive() else Qt.black)
 		self.progress_page_button.setIcon(qta.icon("fa5s.tasks", color="white" if self.isDarkThemeActive() else "black"))
+		self.unpack_button.setIcon(qta.icon("fa5s.box-open", color="white" if self.isDarkThemeActive() else "black"))
 		self.activity_log_page_button.setIcon(qta.icon("fa5s.history", color="white" if self.isDarkThemeActive() else "black"))
 		self.read_process_memory_button.setIcon(qta.icon("fa5s.syringe", color="white" if self.isDarkThemeActive() else "black"))
 
