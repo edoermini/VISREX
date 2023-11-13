@@ -11,7 +11,7 @@ import subprocess
 import platform
 
 from gui.updaters import ActivityUpdater, ExecutablesUpdater
-from gui.dialogs import ReadProcessMemoryDialog, OpenToolDialog
+from gui.dialogs import ReadProcessMemoryDialog, ComboBoxDialog
 from gui.flowcharts import GraphvizFlowchart
 from gui.tables import ResponsiveTableWidget
 from gui.shared import StatusMessagesQueue
@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
 		toolbar_actions = QActionGroup(self)
 		toolbar_actions.setExclusive(True)
 
-		self.progress_page_button = QAction(qta.icon("fa5s.tasks"), "Progress", self)
+		self.progress_page_button = QAction(qta.icon("fa5s.project-diagram"), "Progress", self)
 		self.progress_page_button.triggered.connect(lambda: stacked_widget.setCurrentIndex(0))
 		self.progress_page_button.setCheckable(True)
 		self.progress_page_button.setChecked(True)
@@ -185,15 +185,14 @@ class MainWindow(QMainWindow):
 		self.timer.timeout.connect(self.updateStatus)
 		self.timer.start(2000)  # Switch messages every 2000 milliseconds
 
-		self.activity_updater = ActivityUpdater(self.analysis)
+		self.activity_updater = ActivityUpdater(self.analysis, 500)
 		self.activity_updater.dataUpdated.connect(self.updateAnalysisProgress)
-		self.activity_updater.start(500)
-
+		self.activity_updater.start()
+		
 		self.executablesFinderStart()
 	
 	def updateStatus(self):
 		# Display the next message in the list
-
 		message = self.messages.get_message_rotation()
 
 		if message is None:
@@ -230,7 +229,6 @@ class MainWindow(QMainWindow):
 
 	def executablesFinderStart(self):
 		message_index = self.messages.add('Looking for executables')
-
 		executables_finder_thread = ExecutablesUpdater(self.analysis)
 		executables_finder_thread.finished.connect(partial(self.executablesFinderFinish, message_index, executables_finder_thread))
 		executables_finder_thread.start()
@@ -291,7 +289,7 @@ class MainWindow(QMainWindow):
 
 		qdarktheme.setup_theme(theme)
 		self.flowchart.setEdgesColor(Qt.white if self.isDarkThemeActive() else Qt.black)
-		self.progress_page_button.setIcon(qta.icon("fa5s.tasks", color="white" if self.isDarkThemeActive() else "black"))
+		self.progress_page_button.setIcon(qta.icon("fa5s.project-diagram", color="white" if self.isDarkThemeActive() else "black"))
 		self.unpack_button.setIcon(qta.icon("fa5s.box-open", color="white" if self.isDarkThemeActive() else "black"))
 		self.activity_log_page_button.setIcon(qta.icon("fa5s.history", color="white" if self.isDarkThemeActive() else "black"))
 		self.read_process_memory_button.setIcon(qta.icon("fa5s.syringe", color="white" if self.isDarkThemeActive() else "black"))
@@ -306,22 +304,33 @@ class MainWindow(QMainWindow):
 		executables = self.analysis.get_executables()
 
 		tools = [tool for tool in self.analysis.workflow['workflow']['nodes'][node_id]['tools'] if tool in executables]
-		dialog = OpenToolDialog(tools)
-		dialog.setMinimumWidth(200)
-		result = dialog.exec_()
+		select_tool_dialog = ComboBoxDialog("Select tool", tools)
+		select_tool_dialog.setMinimumWidth(300)
+		select_tool_dialog_result = QDialog.Accepted
+		select_executable_dialog_result = QDialog.Rejected
 
-		if result == QDialog.Accepted:
-			tool = dialog.getSelected()
-			executable = executables[tool]
+		while select_tool_dialog_result == QDialog.Accepted and select_executable_dialog_result == QDialog.Rejected:
 
-			if self.analysis.workflow['tools'][tool]['nature'] == 'GUI' or self.analysis.workflow['tools'][tool]['nature'] == 'CLI-GUI':
-				subprocess.Popen(executable)
-			else:
-				if platform.system() == "Windows":
-					subprocess.Popen(["start", "cmd", "/k", executable], shell=True, close_fds=True, start_new_session=True)
-				elif platform.system() == "Linux":
-					subprocess.Popen(["x-terminal-emulator", "-e", executable], shell=True, close_fds=True, start_new_session=True)
-	
+			select_tool_dialog_result = select_tool_dialog.exec_()
+
+			if select_tool_dialog_result == QDialog.Accepted:
+				tool = select_tool_dialog.getSelected()
+
+				select_executable_dialog = ComboBoxDialog("Select executable", executables[tool])
+				select_executable_dialog_result = select_executable_dialog.exec_()
+				
+				if select_executable_dialog_result == QDialog.Accepted:
+
+					executable = select_executable_dialog.getSelected()
+
+					if self.analysis.workflow['tools'][tool]['nature'] == 'GUI' or self.analysis.workflow['tools'][tool]['nature'] == 'CLI-GUI':
+						subprocess.Popen(executable)
+					else:
+						if platform.system() == "Windows":
+							subprocess.Popen(["start", "cmd", "/k", executable], shell=True, close_fds=True, start_new_session=True)
+						elif platform.system() == "Linux":
+							subprocess.Popen(["x-terminal-emulator", "-e", executable], shell=True, close_fds=True, start_new_session=True)
+		
 	def isDarkThemeActive(self):
 
 		# Check the color role for the WindowText color

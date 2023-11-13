@@ -5,16 +5,17 @@ from analysis import Analysis
 class ActivityUpdater(QObject):
 	dataUpdated = pyqtSignal()
 
-	def __init__(self, analysis: Analysis):
+	def __init__(self, analysis: Analysis, timeout:int):
 		super().__init__()
 		self.analysis = analysis
 		self.thread_pool = QThreadPool.globalInstance()
 		self.timer = QTimer(self)
 		self.timer.timeout.connect(self.updateData)
+		self.timeout = timeout
 		self.running = False  # Flag to track the state
 
-	def start(self, timeout):
-		self.timer.start(timeout)
+	def start(self):
+		self.timer.start(self.timeout)
 		self.running = True
 
 	def stop(self):

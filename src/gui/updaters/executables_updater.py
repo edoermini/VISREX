@@ -3,6 +3,7 @@ from PyQt6.QtCore import QThread, pyqtSignal
 import platform
 import os
 import re
+import subprocess
 
 from analysis import Analysis
 
@@ -35,7 +36,24 @@ class ExecutablesUpdater(QThread):
 			self._find_exec_in_path('/Applications')
 			self._find_exec_in_path('/usr/local/bin')
 		
-	
+	def _is_valid_executable(self, file_path):
+		valid = False
+		process = None
+
+		try:
+			# Attempt to execute the file with a harmless command
+			process = subprocess.Popen([file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			valid=True
+		except subprocess.CalledProcessError:
+			valid=False
+		except Exception:
+			valid=False
+		finally:
+			if process is not None:
+				process.kill()
+		
+		return valid
+
 	def _find_exec_in_path(self, path:str):
 		for tool_name, tool in self.analysis.workflow['tools'].items():
 			pattern = re.compile(tool['regex'])
@@ -51,5 +69,3 @@ class ExecutablesUpdater(QThread):
 							executable = os.path.join(root, file)
 
 							self.analysis.update_executable(tool_name, executable)
-
-							break

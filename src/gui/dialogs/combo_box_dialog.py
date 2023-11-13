@@ -1,16 +1,18 @@
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QComboBox, QPushButton, QHBoxLayout
 
 
-class OpenToolDialog(QDialog):
-    def __init__(self, tools:list[str]):
+class ComboBoxDialog(QDialog):
+    def __init__(self, title:str, items:list[str]):
         super().__init__()
 
-        self.tools = tools
+        self.title = title
+        self.items = items
         self.initUI()
 
     def initUI(self):
         # Set up the layout
         layout = QVBoxLayout()
+        self.setWindowTitle(self.title)
 
         # Add a label
         label = QLabel('Select an option:')
@@ -19,7 +21,7 @@ class OpenToolDialog(QDialog):
         # Add a dropdown menu
         self.combo_box = QComboBox()
 
-        for tool in self.tools:
+        for tool in self.items:
             self.combo_box.addItem(tool)
         
         layout.addWidget(self.combo_box)
@@ -29,8 +31,8 @@ class OpenToolDialog(QDialog):
         close_button = QPushButton('Close')
         close_button.clicked.connect(self.closeClicked)
 
-        open_button = QPushButton('Open')
-        open_button.clicked.connect(self.openClicked)
+        open_button = QPushButton('Ok')
+        open_button.clicked.connect(self.okClicked)
 
         buttons_layout.addWidget(close_button)
         buttons_layout.addWidget(open_button)
@@ -44,7 +46,7 @@ class OpenToolDialog(QDialog):
         self.accept()
         self.setResult(QDialog.Rejected)
     
-    def openClicked(self):
+    def okClicked(self):
         self.accept()
     
     def getSelected(self):

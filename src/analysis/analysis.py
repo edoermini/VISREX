@@ -17,8 +17,9 @@ class Analysis:
 		self.active_tools : set[str] = set([])
 		
 		self.activity_log : list[OrderedDict[str, str]] = []
-		self.executables : dict[str, str] = {}
-		self.arguments : dict[str, str] = {}
+		self.executables : dict[str, list[str]] = {}
+		
+		self.running_tools_info : dict[str, OrderedDict[str, str]] = {}
 
 		# locks both self.activity_log and self.executables resources
 		self.activity_log_lock = Lock()
@@ -49,14 +50,21 @@ class Analysis:
 				if re.match(tool['regex'], process_name):
 					self.active_tools.add(tool_name)
 					
+					if tool_name not in self.running_tools_info:
+							self.running_tools_info[tool_name] = {
+								'executable':'',
+								'arguments':''
+							}
+
 					if executable:
 						self.update_executable(tool_name, executable)
-					
-					if tool_name not in arguments:
-						if arguments:
-							self.arguments[tool_name] = ','.join(arguments)
-						else:
-							self.arguments[tool_name] = ""
+
+						if not self.running_tools_info[tool_name]['executable']:
+							self.running_tools_info[tool_name]['executable'] = executable
+
+					if arguments:
+						if not self.running_tools_info[tool_name]['arguments']:
+							self.running_tools_info[tool_name]['arguments'] = ','.join(arguments)
 		
 		return old_active_tools
 
@@ -68,21 +76,21 @@ class Analysis:
 		opened_tools = list(new_active_tools - old_active_tools)
 		
 		log_entries = []
-		
+
 		for i, tool in enumerate(closed_tools + opened_tools):
 			activity = "Close tool"
-			arguments = self.arguments[tool]
+
+			running_tool_info = self.running_tools_info.pop(tool)
 
 			if len(closed_tools) == 0 or i > len(closed_tools):
 				activity = "Open tool"
-				self.arguments.pop(tool)
+				self.running_tools_info[tool] = running_tool_info
 			
 			log_entries.append(OrderedDict({
 				"time": log_time,
 				"tool": tool,
 				"activity": activity,
-				"executable": self.executables[tool],
-				"arguments": arguments
+				**running_tool_info
 			}))
 
 		self.update_activity_log(log_entries)
@@ -124,13 +132,18 @@ class Analysis:
 	
 	def update_executable(self, tool_name:str, executable:str):
 		with self.executables_lock:
-			self.executables[tool_name] = executable
+			if tool_name not in self.executables:
+				self.executables[tool_name] = []
+			
+			if executable not in self.executables[tool_name]:
+				self.executables[tool_name].append(executable)
 	
 	def get_executables(self):
 		executables = {}
 
 		with self.executables_lock:
-			executables = self.executables.copy()
+			for tool_name, tool_exec in self.executables.items():
+				executables[tool_name] = tool_exec.copy()
 		
 		return executables
 

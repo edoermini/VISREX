@@ -155,7 +155,6 @@ class Workflow:
 				"color":"#2CD551",
 				"results": [],
 				"tools": [
-				  "scylla",
 				  "idapro"
 				]
 			  },
@@ -293,7 +292,8 @@ class Workflow:
 				"results": [],
 				"tools": [
 				  "importreconstructor",
-				  "icddumpfix"
+				  "icddumpfix",
+				  "scylla"
 				]
 			  },
 			  "bhvr_0": {
