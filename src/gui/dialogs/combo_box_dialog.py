@@ -34,6 +34,9 @@ class ComboBoxDialog(QDialog):
         open_button = QPushButton('Ok')
         open_button.clicked.connect(self.okClicked)
 
+        if len(self.items) == 0:
+            open_button.setDisabled(True)
+
         buttons_layout.addWidget(close_button)
         buttons_layout.addWidget(open_button)
 
