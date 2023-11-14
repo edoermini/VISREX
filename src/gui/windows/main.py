@@ -11,7 +11,7 @@ import subprocess
 import platform
 
 from gui.updaters import ActivityUpdater, ExecutablesUpdater
-from gui.dialogs import ReadProcessMemoryDialog, ComboBoxDialog
+from gui.dialogs import ReadProcessMemoryDialog, ComboBoxDialog, ToolsCoverageDialog
 from gui.flowcharts import GraphvizFlowchart
 from gui.tables import ResponsiveTableWidget
 from gui.shared import StatusMessagesQueue
@@ -48,6 +48,7 @@ class MainWindow(QMainWindow):
 		self.flowchart = GraphvizFlowchart(self.analysis.workflow.dot_code(), Qt.white if self.isDarkThemeActive() else Qt.black)
 		self.flowchart.signals.rightClick.connect(self.openFlowchartNodeContextMenu)
 		self.flowchart.setOpacity(0.2)
+		self.flowchart.setProgressPercentage(0)
 
 		flowchart_page = QWidget()
 		flowchart_page_layout = QVBoxLayout(flowchart_page)
@@ -116,6 +117,18 @@ class MainWindow(QMainWindow):
 		load_action = QAction('Open analysis', self)
 		load_action.triggered.connect(self.openFile)
 		file_menu.addAction(load_action)
+
+		file_menu.addSeparator()
+
+		export_flowchat_svg_action = QAction('Export Flowchart SVG', self)
+		export_flowchat_svg_action.triggered.connect(self.exportSVG)
+		file_menu.addAction(export_flowchat_svg_action)
+
+		export_flowchat_svg_action = QAction('Export Flowchart PNG', self)
+		export_flowchat_svg_action.triggered.connect(self.exportPNG)
+		file_menu.addAction(export_flowchat_svg_action)
+
+		file_menu.addSeparator()
 
 		exit_action = QAction('Quit', self)
 		exit_action.triggered.connect(self.close)
@@ -191,6 +204,16 @@ class MainWindow(QMainWindow):
 		
 		self.executablesFinderStart()
 	
+	def exportSVG(self):
+		file_path, _ = QFileDialog.getSaveFileName(self, "Save as SVG", "", "SVG Files (*.svg)")
+		if file_path:
+			self.flowchart.exportSVG(file_path)
+	
+	def exportPNG(self):
+		file_path, _ = QFileDialog.getSaveFileName(self, "Save as PNG", "", "PNG Files (*.png)")
+		if file_path:
+			self.flowchart.exportSVG(file_path)
+
 	def updateStatus(self):
 		# Display the next message in the list
 		message = self.messages.get_message_rotation()
@@ -230,12 +253,28 @@ class MainWindow(QMainWindow):
 	def executablesFinderStart(self):
 		message_index = self.messages.add('Looking for executables')
 		executables_finder_thread = ExecutablesUpdater(self.analysis)
+		executables_finder_thread.executableFound.connect(self.updateToolsCoverage)
 		executables_finder_thread.finished.connect(partial(self.executablesFinderFinish, message_index, executables_finder_thread))
 		executables_finder_thread.start()
 
 	def executablesFinderFinish(self, message_index:int, thread:QThread):
 		self.messages.remove(message_index)
 		thread.terminate()
+
+	def updateToolsCoverage(self):
+		executables = self.analysis.get_executables()
+
+		for node_id, node_data in self.analysis.workflow['workflow']['nodes'].items():
+			if len(node_data['tools']) == 0:
+				continue
+
+			tool_count = 0
+
+			for tool in node_data['tools']:
+				if tool in executables:
+					tool_count +=1
+			
+			self.flowchart.setProgressPercentage(tool_count/len(node_data['tools']), node_id)
 
 	def saveFile(self):
 
@@ -296,10 +335,25 @@ class MainWindow(QMainWindow):
 
 	def openFlowchartNodeContextMenu(self, node_id, mouse_pos):
 		context_menu = QMenu(self)
-		action = context_menu.addAction("Launch tool")
-		action.triggered.connect(partial(self.openTool, node_id))
+		
+		launch_tool_action = context_menu.addAction("Launch tool")
+		launch_tool_action.triggered.connect(partial(self.openTool, node_id))
+		
+		show_tools_coverage_action = context_menu.addAction("Show tools coverage")
+		show_tools_coverage_action.triggered.connect(partial(self.showToolsCoverage, node_id))
+		
 		context_menu.exec_(mouse_pos)
 	
+	def showToolsCoverage(self, node_id):
+		executables = self.analysis.get_executables()
+
+		coverage = {}
+		for tool in self.analysis.workflow['workflow']['nodes'][node_id]['tools']:
+			coverage[tool] = tool in executables
+
+		tools_coverage_dialog = ToolsCoverageDialog(coverage, self.isDarkThemeActive())
+		tools_coverage_dialog.exec_()
+
 	def openTool(self, node_id):
 		executables = self.analysis.get_executables()
 

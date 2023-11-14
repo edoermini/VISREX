@@ -4,7 +4,8 @@ from graphviz import Digraph
 import io
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsView, QGraphicsTextItem
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor
+from PyQt6.QtGui import QColor, QPainter, QPixmap
+from PyQt6.QtSvg import QSvgGenerator
 import xml.etree.ElementTree as ET
 
 from .graphviz_flowchart_items import GraphvizFlowchartEdge, GraphvizFlowchartDecision, GraphvizFlowchartProcess
@@ -163,3 +164,35 @@ class GraphvizFlowchart(QGraphicsView):
 	
 	def nodeRightClick(self, node_id, mouse_pos):
 		self.signals.rightClick.emit(node_id, mouse_pos)
+	
+	def setProgressPercentage(self, percentage, node_id:str=None):
+		if not node_id:
+			for _, flowchart_item in self.nodes.items():
+				if isinstance(flowchart_item, GraphvizFlowchartProcess):
+					flowchart_item.setProgressPercentage(percentage)
+		else:
+			if isinstance(self.nodes[node_id], GraphvizFlowchartProcess):
+				self.nodes[node_id].setProgressPercentage(percentage)
+	
+	def exportSVG(self, filename:str):
+		svg_generator = QSvgGenerator()
+		svg_generator.setFileName(filename)
+		svg_generator.setSize(self.gscene.sceneRect().size().toSize())
+		svg_generator.setViewBox(self.gscene.sceneRect())
+
+		painter = QPainter()
+		painter.begin(svg_generator)
+		self.gscene.render(painter)
+		painter.end()
+
+	def exportPNG(self, filename:str):
+		# Create a QPixmap to render the scene
+		pixmap = QPixmap(self.gscene.sceneRect().size().toSize())
+
+		# Create a QPainter to paint on the QPixmap
+		painter = QPainter(pixmap)
+		self.gscene.render(painter)
+		painter.end()
+
+		# Save the QPixmap to a PNG file
+		pixmap.save(filename)

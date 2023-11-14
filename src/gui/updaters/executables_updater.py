@@ -9,6 +9,7 @@ from analysis import Analysis
 
 class ExecutablesUpdater(QThread):
 	finished = pyqtSignal()
+	executableFound = pyqtSignal()
 
 	def __init__(self, analysis:Analysis):
 		super().__init__()
@@ -67,5 +68,5 @@ class ExecutablesUpdater(QThread):
 						if extension.lower() in self.extensions:
 							
 							executable = os.path.join(root, file)
-
+							self.executableFound.emit()
 							self.analysis.update_executable(tool_name, executable)

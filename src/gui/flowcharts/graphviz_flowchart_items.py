@@ -1,11 +1,33 @@
-from PyQt6.QtWidgets import QGraphicsItem, QGraphicsEllipseItem, QGraphicsPolygonItem, QGraphicsSceneContextMenuEvent, QGraphicsSceneHoverEvent, QGraphicsTextItem, QGraphicsItemGroup, QGraphicsPathItem
-from PyQt6.QtGui import QColor, QBrush, QPolygonF, QPen, QPainterPath, QFont
+from PyQt6.QtWidgets import QGraphicsItem, QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsPolygonItem, QGraphicsSceneContextMenuEvent, QGraphicsSceneHoverEvent, QGraphicsTextItem, QGraphicsItemGroup, QGraphicsPathItem
+from PyQt6.QtGui import QColor, QBrush, QPolygonF, QPen, QPainterPath, QFont, QPainter
 from PyQt6.QtCore import Qt, QPointF
 
 import xml.etree.ElementTree as ET
 import re
 
 from .signals import GraphvizFlowchartNodeSignals
+
+class ProgressBarItem(QGraphicsRectItem):
+	def __init__(self, x, y, width, color:QColor, progress_percentage:float=1, parent=None):
+		super().__init__(x, y, width, 2, parent)
+		self.progress_percentage = progress_percentage  # Default progress percentage
+		self.color = color
+
+	def paint(self, painter: QPainter, option, widget=None):
+		painter.setRenderHint(painter.Antialiasing)  # Optional, for smoother drawing
+
+		# Draw the progress bar
+		progress_rect = self.rect()
+		progress_rect.setWidth(progress_rect.width() * self.progress_percentage)
+
+		painter.setPen(QPen(Qt.NoPen))
+		painter.setBrush(QBrush(self.color, Qt.SolidPattern))  # Green color for the progress bar
+		painter.drawRect(progress_rect)
+
+	def setProgressPercentage(self, percentage):
+		if 0 <= percentage <= 1:
+			self.progress_percentage = percentage
+			self.update()
 
 class GraphvizFlowchartItem(QGraphicsItemGroup):
 	def __init__(self,flowchart_height:float, xml_text:str = "", parent: QGraphicsItem = None):
@@ -224,6 +246,9 @@ class GraphvizFlowchartProcess(GraphvizFlowchartItem):
 
 		self.addToGroup(self.item)
 
+		self.progress_bar = ProgressBarItem(x, y+height+2.5, width, self.color, 0.5)
+		self.addToGroup(self.progress_bar)
+
 		self.set_label(self.item, self.item.boundingRect().center())
 	
 	def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent | None) -> None:
@@ -243,3 +268,6 @@ class GraphvizFlowchartProcess(GraphvizFlowchartItem):
 	def contextMenuEvent(self, event: QGraphicsSceneContextMenuEvent | None) -> None:
 		mouse_pos = event.screenPos()
 		self.signals.rightClick.emit(self.node_id, mouse_pos)
+	
+	def setProgressPercentage(self, percentage:float):
+		self.progress_bar.setProgressPercentage(percentage)
