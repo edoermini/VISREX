@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMenu, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QTableWidgetItem, QFileDialog, QDialog, QLabel
+from PyQt6.QtWidgets import QMenu, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QTableWidgetItem, QFileDialog, QDialog, QLabel, QTextEdit
 from PyQt6.QtCore import Qt, QSize, QTimer, QThread
 from PyQt6.QtGui import QMovie, QAction, QActionGroup
 import qtawesome as qta
@@ -9,14 +9,20 @@ from time import time
 from functools import partial
 import subprocess
 import platform
+import markdown
 
 from gui.updaters import ActivityUpdater, ExecutablesUpdater
-from gui.dialogs import ReadProcessMemoryDialog, ComboBoxDialog, ToolsCoverageDialog
+from gui.dialogs import ReadProcessMemoryDialog, ComboBoxDialog, ToolsCoverageDialog, IATReconstructionDialog, TextBoxDialog
 from gui.flowcharts import GraphvizFlowchart
 from gui.tables import ResponsiveTableWidget
 from gui.shared import StatusMessagesQueue
 
-from analysis import Analysis
+from analysis import Analysis, AnalysisLogEntry
+
+
+if platform.system() == "Windows":
+	from masup.tools import Scylla
+
 
 class MainWindow(QMainWindow):
 	def __init__(self, malware_sample=None, analysis_file=None):
@@ -47,7 +53,7 @@ class MainWindow(QMainWindow):
 		# flowchart page
 		self.flowchart = GraphvizFlowchart(self.analysis.workflow.dot_code(), Qt.white if self.isDarkThemeActive() else Qt.black)
 		self.flowchart.signals.rightClick.connect(self.openFlowchartNodeContextMenu)
-		self.flowchart.setOpacity(0.2)
+		self.flowchart.setOpacity(0.3)
 		self.flowchart.setProgressPercentage(0)
 
 		flowchart_page = QWidget()
@@ -59,6 +65,7 @@ class MainWindow(QMainWindow):
 		activity_log_page = QWidget()
 		activity_log_page_layout = QVBoxLayout(activity_log_page)
 		activity_log_page_layout.addWidget(self.activity_log_table)
+		self.activity_log_table.doubleClicked.connect(self.activity_log_table_double_click)
 
 		stacked_widget.addWidget(flowchart_page)
 		stacked_widget.addWidget(activity_log_page)
@@ -95,6 +102,11 @@ class MainWindow(QMainWindow):
 		self.read_process_memory_button.triggered.connect(self.readProcessMemory)
 		self.read_process_memory_button.setCheckable(False)
 		self.toolbar.addAction(self.read_process_memory_button)
+
+		self.iat_reconstruction_button = QAction(qta.icon("fa5s.tools", color="white" if self.isDarkThemeActive() else "black"), "Unpack", self)
+		self.iat_reconstruction_button.triggered.connect(self.iatReconstruct)
+		self.iat_reconstruction_button.setCheckable(False)
+		self.toolbar.addAction(self.iat_reconstruction_button)
 
 		self.unpack_button = QAction(qta.icon("fa5s.box-open", color="white" if self.isDarkThemeActive() else "black"), "Unpack", self)
 		self.unpack_button.triggered.connect(self.unpack)
@@ -232,23 +244,34 @@ class MainWindow(QMainWindow):
 		
 	def updateAnalysisProgress(self):
 		
+		last_row = 0#self.activity_log_table.rowCount()
+
 		for node_id in self.analysis.activities:
 			self.flowchart.setOpacity(1, node_id)
-		
-		for row, log_entry in enumerate(self.analysis.get_activity_log()):
-			column_count = len(log_entry)
-			columns = list(log_entry.values())
+
+		for i, log_entry in enumerate(self.analysis.get_activity_log(last_row)):
+			row = last_row + i
+			columns = log_entry.to_json(string_values=True)
+			column_count = len(columns)
 
 			if row == self.activity_log_table.rowCount():
 				self.activity_log_table.insertRow(row)
 			
 			if column_count > self.activity_log_table.columnCount():
 				self.activity_log_table.setColumnCount(column_count)
-				self.activity_log_table.setHorizontalHeaderLabels(log_entry.keys())
+				self.activity_log_table.setHorizontalHeaderLabels(columns.keys())
 
-			for col, value in enumerate(columns):
-				item = QTableWidgetItem(value)
-				self.activity_log_table.setItem(row, col, item)
+			for col, (_, value) in enumerate(columns.items()):
+
+				if self.activity_log_table.horizontalHeaderItem(col).text() == 'notes':
+					html_value = markdown.markdown(value)
+					markdown_view = QTextEdit()
+					markdown_view.setReadOnly(True)
+					markdown_view.setHtml(html_value)
+
+					self.activity_log_table.setCellWidget(row, col, markdown_view)
+				else:
+					self.activity_log_table.setItem(row, col, QTableWidgetItem(value))
 
 	def executablesFinderStart(self):
 		message_index = self.messages.add('Looking for executables')
@@ -262,19 +285,15 @@ class MainWindow(QMainWindow):
 		thread.terminate()
 
 	def updateToolsCoverage(self):
-		executables = self.analysis.get_executables()
+		nodes_ids = self.analysis.workflow.get_nodes_ids()
 
-		for node_id, node_data in self.analysis.workflow['workflow']['nodes'].items():
-			if len(node_data['tools']) == 0:
-				continue
+		for node_id in nodes_ids:
 
-			tool_count = 0
-
-			for tool in node_data['tools']:
-				if tool in executables:
-					tool_count +=1
+			tools = self.analysis.get_tools(node_id)
+			installed_tools = self.analysis.get_installed_tools(node_id)
 			
-			self.flowchart.setProgressPercentage(tool_count/len(node_data['tools']), node_id)
+			if len(tools) > 0:
+				self.flowchart.setProgressPercentage(len(installed_tools)/len(tools), node_id)
 
 	def saveFile(self):
 
@@ -302,16 +321,53 @@ class MainWindow(QMainWindow):
 
 		if result == QDialog.Accepted:
 
-			self.analysis.update_activity_log([{
-				"time":time(), 
-				"activity":"Read process memory", 
-				"tool": "", 
-				"executable":"", 
-				"arguments":[f"{read_process_memory.getProcessName()}, {read_process_memory.getStartAddress()}, {read_process_memory.getBytesLength()}",]
-			}])
+			self.analysis.update_activity_log(
+				AnalysisLogEntry(
+					"",
+					"Read process memory",
+					"",
+					[f"{read_process_memory.getProcessName()}, {read_process_memory.getStartAddress()}, {read_process_memory.getBytesLength()}"],
+					"",
+					time()
+				)
+				
+			)
 		
 	def unpack(self):
 		print('unpacking...')
+	
+	def iatReconstruct(self):
+		tools = self.analysis.get_installed_tools('impt_1')
+		
+		iat_reconstruction_dialog = IATReconstructionDialog(tools, self)
+		iat_reconstruction_dialog.setMinimumWidth(300)
+		iat_reconstruction_dialog_result = QDialog.Accepted
+		executable_dialog_result = QDialog.Rejected
+
+		while iat_reconstruction_dialog_result == QDialog.Accepted and executable_dialog_result == QDialog.Rejected:
+			iat_reconstruction_dialog_result = iat_reconstruction_dialog.exec_()
+
+			if iat_reconstruction_dialog_result == QDialog.Accepted:
+				tool = iat_reconstruction_dialog.getTool()
+				oep = iat_reconstruction_dialog.getOEP()
+
+				executable_dialog = ComboBoxDialog('Chose executable', self.analysis.get_executable(tool))
+				executable_dialog_result = executable_dialog.exec_()
+
+				if executable_dialog_result == QDialog.Accepted:
+
+					if tool == 'scylla':
+						scylla = Scylla(executable_dialog.getSelected())
+						scylla.run()
+						scylla.attach_to_process(self.analysis.malware_sample)
+						scylla.set_oep(oep)
+						scylla.iat_autosearch()
+						scylla.get_imports()
+					
+					else:
+						break
+
+				print(f"{iat_reconstruction_dialog.getOEP()}, {iat_reconstruction_dialog.getTool()}")
 
 	def closeEvent(self, event):
 		self.activity_updater.stop()
@@ -330,6 +386,7 @@ class MainWindow(QMainWindow):
 		self.flowchart.setEdgesColor(Qt.white if self.isDarkThemeActive() else Qt.black)
 		self.progress_page_button.setIcon(qta.icon("fa5s.project-diagram", color="white" if self.isDarkThemeActive() else "black"))
 		self.unpack_button.setIcon(qta.icon("fa5s.box-open", color="white" if self.isDarkThemeActive() else "black"))
+		self.iat_reconstruction_button.setIcon(qta.icon("fa5s.tools", color="white" if self.isDarkThemeActive() else "black"))
 		self.activity_log_page_button.setIcon(qta.icon("fa5s.history", color="white" if self.isDarkThemeActive() else "black"))
 		self.read_process_memory_button.setIcon(qta.icon("fa5s.syringe", color="white" if self.isDarkThemeActive() else "black"))
 
@@ -341,6 +398,26 @@ class MainWindow(QMainWindow):
 		
 		show_tools_coverage_action = context_menu.addAction("Show tools coverage")
 		show_tools_coverage_action.triggered.connect(partial(self.showToolsCoverage, node_id))
+
+		automatize_menu = QMenu("Automatize")
+
+		if node_id == 'impt_1':
+			context_menu.addMenu(automatize_menu)
+
+			iat_reconstruct_action = QAction("IAT reconstruction")
+			iat_reconstruct_action.triggered.connect(self.iatReconstruct)
+			automatize_menu.addAction(iat_reconstruct_action)
+
+			context_menu.addMenu(automatize_menu)
+		
+		if node_id == 'bhvr_3':
+			context_menu.addMenu(automatize_menu)
+
+			inspect_process_memory_action = QAction("Inspect process memory")
+			inspect_process_memory_action.triggered.connect(self.readProcessMemory)
+			automatize_menu.addAction(inspect_process_memory_action)
+
+			context_menu.addMenu(automatize_menu)
 		
 		context_menu.exec_(mouse_pos)
 	
@@ -378,13 +455,39 @@ class MainWindow(QMainWindow):
 					executable = select_executable_dialog.getSelected()
 
 					if self.analysis.workflow['tools'][tool]['nature'] == 'GUI' or self.analysis.workflow['tools'][tool]['nature'] == 'CLI-GUI':
+						
 						subprocess.Popen(executable)
 					else:
 						if platform.system() == "Windows":
 							subprocess.Popen(["start", "cmd", "/k", executable], shell=True, close_fds=True, start_new_session=True)
 						elif platform.system() == "Linux":
 							subprocess.Popen(["x-terminal-emulator", "-e", executable], shell=True, close_fds=True, start_new_session=True)
-		
+	
+	def activity_log_table_double_click(self, item):
+		row = item.row()
+		col = item.column()
+	
+		col_header = self.activity_log_table.horizontalHeaderItem(col).text()
+
+		if col_header == 'notes':
+			log_entry = self.analysis.get_activity_log_entry(row)
+
+			print(log_entry.notes)
+
+			dialog = TextBoxDialog('Write your notes', log_entry.notes, self.isDarkThemeActive())
+			result = dialog.exec_()
+
+			if result == QDialog.Accepted:
+				note = dialog.getText()
+				self.analysis.update_log_entry_notes(row, note)
+				
+				html_value = markdown.markdown(note)
+				markdown_view = QTextEdit()
+				markdown_view.setReadOnly(True)
+				markdown_view.setHtml(html_value)
+
+				self.activity_log_table.setCellWidget(row, col, markdown_view)
+
 	def isDarkThemeActive(self):
 
 		# Check the color role for the WindowText color

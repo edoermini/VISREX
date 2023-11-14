@@ -1,6 +1,6 @@
 from masup.tools.generics import CLITool
 
-class UPXTool(CLITool):
+class UPX(CLITool):
     def __init__(self, path: str):
         super().__init__(path)
 

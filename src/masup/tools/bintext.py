@@ -7,7 +7,7 @@ import random
 import string
 import time
 
-class BinTextTool(DesktopTool):
+class BinText(DesktopTool):
     def __init__(self, path: str):
         super().__init__(path)
 

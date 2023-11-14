@@ -7,19 +7,23 @@ from threading import Lock
 from datetime import datetime
 from time import time
 from collections import OrderedDict
+import copy
 
 from .workflow import Workflow
+from .analysis_log_entry import AnalysisLogEntry
 
 class Analysis:
-	def __init__(self, malware_sample:str=""):
+	def __init__(self, malware_sample):
+		self.malware_sample = malware_sample
+
 		self.workflow = Workflow(malware_sample)
 		self.activities : dict[str, Any] = {}
 		self.active_tools : set[str] = set([])
 		
-		self.activity_log : list[OrderedDict[str, str]] = []
+		self.activity_log : list[AnalysisLogEntry] = []
 		self.executables : dict[str, list[str]] = {}
 		
-		self.running_tools_info : dict[str, OrderedDict[str, str]] = {}
+		self.running_tools_info : dict[str, OrderedDict[str, Any]] = {}
 
 		# locks both self.activity_log and self.executables resources
 		self.activity_log_lock = Lock()
@@ -53,7 +57,7 @@ class Analysis:
 					if tool_name not in self.running_tools_info:
 							self.running_tools_info[tool_name] = {
 								'executable':'',
-								'arguments':''
+								'arguments':[]
 							}
 
 					if executable:
@@ -64,13 +68,11 @@ class Analysis:
 
 					if arguments:
 						if not self.running_tools_info[tool_name]['arguments']:
-							self.running_tools_info[tool_name]['arguments'] = ','.join(arguments)
+							self.running_tools_info[tool_name]['arguments'] = arguments
 		
 		return old_active_tools
 
 	def _update_activity_log(self, current_time:int, old_active_tools:set, new_active_tools:set):
-		
-		log_time = datetime.fromtimestamp(current_time).isoformat()
 
 		closed_tools = list(old_active_tools - new_active_tools)
 		opened_tools = list(new_active_tools - old_active_tools)
@@ -86,12 +88,14 @@ class Analysis:
 				activity = "Open tool"
 				self.running_tools_info[tool] = running_tool_info
 			
-			log_entries.append(OrderedDict({
-				"time": log_time,
-				"tool": tool,
-				"activity": activity,
-				**running_tool_info
-			}))
+			log_entries.append(AnalysisLogEntry(
+				tool,
+				activity,
+				running_tool_info['executable'],
+				running_tool_info['arguments'],
+				"",
+				current_time,
+			))
 
 		self.update_activity_log(log_entries)
 
@@ -126,9 +130,13 @@ class Analysis:
 		with open(file_path, "wb") as file:
 			pickle.dump(self, file)
 
-	def update_activity_log(self, data:list[OrderedDict[str, str]]):
+	def update_activity_log(self, data:list[AnalysisLogEntry] | AnalysisLogEntry):
 		with self.activity_log_lock:
-			self.activity_log.extend(data)
+
+			if isinstance(data, list):
+				self.activity_log.extend(data)
+			elif isinstance(data, AnalysisLogEntry):
+				self.activity_log.append(data)
 	
 	def update_executable(self, tool_name:str, executable:str):
 		with self.executables_lock:
@@ -147,11 +155,35 @@ class Analysis:
 		
 		return executables
 
-	def get_activity_log(self):
+	def get_activity_log(self, from_index:int = 0) -> AnalysisLogEntry:
 		log = []
 
 		with self.activity_log_lock:
-			for log_entry in self.activity_log:
-				log.append(log_entry.copy())
+			for log_entry in self.activity_log[from_index:]:
+				log.append(copy.copy(log_entry))
 		
 		return log
+
+	def get_activity_log_entry(self, index:int) -> AnalysisLogEntry:
+
+		with self.activity_log_lock:
+			return copy.copy(self.activity_log[index])
+
+	def get_installed_tools(self, node_id:str):
+		executables = self.get_executables()
+		installed_tools = set(executables.keys())
+		node_tools = set(self.workflow['workflow']['nodes'][node_id]['tools'])
+
+		return list(installed_tools.intersection(node_tools))
+
+	def get_tools(self, node_id:str):
+		return self.workflow['workflow']['nodes'][node_id]['tools']
+	
+	def get_executable(self, tool:str):
+		with self.executables_lock:
+			return self.executables[tool].copy()
+	
+	def update_log_entry_notes(self, index:int, notes:str):
+		with self.activity_log_lock:
+			self.activity_log[index].notes = notes
+			

@@ -3,7 +3,7 @@ from procmon_parser import ProcmonLogsReader
 
 import tempfile
 
-class ProcMonTool(DesktopTool):
+class ProcMon(DesktopTool):
     def __init__(self, path: str):
         super().__init__(path)
 

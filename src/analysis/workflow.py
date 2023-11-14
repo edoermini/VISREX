@@ -843,4 +843,7 @@ class Workflow:
 			dot.edge(edge["source"],edge["destination"], label=edge["value"])
 		
 		return dot
+
+	def get_nodes_ids(self):
+		return self.__dict__['workflow']['nodes'].keys()
 	  

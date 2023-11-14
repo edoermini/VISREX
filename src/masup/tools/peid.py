@@ -1,6 +1,6 @@
 from masup.tools.generics import DesktopTool
 
-class PEidTool(DesktopTool):
+class PEiD(DesktopTool):
     def __init__(self, path: str):
         super().__init__(path)
 

@@ -23,15 +23,15 @@ class ReadProcessMemoryDialog(QDialog):
         formLayout.addRow('Memory address:', self.start_address)
         formLayout.addRow('Length:', self.bytes_length)
 
-        saveButton = QPushButton('View', self)
-        saveButton.clicked.connect(self.view)
+        viewButton = QPushButton('View', self)
+        viewButton.clicked.connect(self.view)
 
         cancelButton = QPushButton('Cancel', self)
         cancelButton.clicked.connect(lambda x : self.close())
 
         buttonLayout = QHBoxLayout()
-        buttonLayout.addWidget(saveButton)
         buttonLayout.addWidget(cancelButton)
+        buttonLayout.addWidget(viewButton)
 
         mainLayout = QVBoxLayout(self)
         mainLayout.addLayout(formLayout)

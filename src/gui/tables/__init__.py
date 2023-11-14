@@ -1,1 +1,1 @@
-from .responsive_table_widget import ResponsiveTableWidget
+from .responsive_table import ResponsiveTableWidget

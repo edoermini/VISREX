@@ -1,3 +1,5 @@
+import typing
+from PyQt6 import QtGui
 from PyQt6.QtWidgets import QTableWidget, QSizePolicy
 from PyQt6.QtGui import QPainter, QPen, QPainterPath
 from PyQt6.QtCore import Qt, QPointF

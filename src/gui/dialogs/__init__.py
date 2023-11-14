@@ -5,3 +5,5 @@ from .main_dialog import MainDialog
 from .combo_box_dialog import ComboBoxDialog
 from .loading_dialog import LoadingDialog
 from .tools_coverage_dialog import ToolsCoverageDialog
+from .iat_reconstruction_dialog import IATReconstructionDialog
+from .text_box_dialog import TextBoxDialog
