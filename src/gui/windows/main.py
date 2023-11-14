@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
 		# flowchart page
 		self.flowchart = GraphvizFlowchart(self.analysis.workflow.dot_code(), Qt.white if self.isDarkThemeActive() else Qt.black)
 		self.flowchart.signals.rightClick.connect(self.openFlowchartNodeContextMenu)
-		self.flowchart.setOpacity(0.2)
+		self.flowchart.setOpacity(0.3)
 		self.flowchart.setProgressPercentage(0)
 
 		flowchart_page = QWidget()
