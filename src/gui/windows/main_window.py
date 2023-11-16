@@ -472,8 +472,6 @@ class MainWindow(QMainWindow):
 		if col_header == 'notes':
 			log_entry = self.analysis.get_activity_log_entry(row)
 
-			print(log_entry.notes)
-
 			dialog = TextBoxDialog('Write your notes', log_entry.notes, self.isDarkThemeActive())
 			result = dialog.exec_()
 
