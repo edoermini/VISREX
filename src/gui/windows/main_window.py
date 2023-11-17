@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMenu, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QTableWidgetItem, QFileDialog, QDialog, QLabel, QTextEdit
+from PyQt6.QtWidgets import QMenu, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QTableWidgetItem, QFileDialog, QDialog, QLabel, QSplitter, QTableWidget
 from PyQt6.QtCore import Qt, QSize, QTimer, QThread
 from PyQt6.QtGui import QMovie, QAction, QActionGroup
 import qtawesome as qta
@@ -16,6 +16,8 @@ from gui.dialogs import ReadProcessMemoryDialog, ComboBoxDialog, ToolsCoverageDi
 from gui.flowcharts import GraphvizFlowchart
 from gui.tables import ResponsiveTableWidget
 from gui.shared import StatusMessagesQueue
+from gui.widgets import MardownEdit
+from gui.utils import isDarkThemeActive
 
 from analysis import Analysis, AnalysisLogEntry
 
@@ -51,7 +53,7 @@ class MainWindow(QMainWindow):
 		stacked_widget = QStackedWidget()
 
 		# flowchart page
-		self.flowchart = GraphvizFlowchart(self.analysis.workflow.dot_code(), Qt.white if self.isDarkThemeActive() else Qt.black)
+		self.flowchart = GraphvizFlowchart(self.analysis.workflow.dot_code(), Qt.white if isDarkThemeActive(self) else Qt.black)
 		self.flowchart.signals.rightClick.connect(self.openFlowchartNodeContextMenu)
 		self.flowchart.setOpacity(0.3)
 		self.flowchart.setProgressPercentage(0)
@@ -61,14 +63,43 @@ class MainWindow(QMainWindow):
 		flowchart_page_layout.addWidget(self.flowchart)
 
 		# activity log page
-		self.activity_log_table = ResponsiveTableWidget(0, [], self)
-		activity_log_page = QWidget()
-		activity_log_page_layout = QVBoxLayout(activity_log_page)
-		activity_log_page_layout.addWidget(self.activity_log_table)
-		self.activity_log_table.doubleClicked.connect(self.activity_log_table_double_click)
+
+		self.activity_log_page = QWidget()
+		activity_log_page_layout = QVBoxLayout(self.activity_log_page)
+
+		activity_log_toolbar = QToolBar(self)
+		
+		self.play_action = QAction(qta.icon("fa5s.play", color="white" if isDarkThemeActive(self) else "black"), "Play", self)
+		activity_log_toolbar.addAction(self.play_action)
+
+		self.stop_action = QAction(qta.icon("fa5s.pause", color="white" if isDarkThemeActive(self) else "black"), "Stop", self)
+		activity_log_toolbar.addAction(self.stop_action)
+		
+		activity_log_toolbar.addSeparator()
+
+		self.step_forward_action = QAction(qta.icon("fa5s.step-forward", color="white" if isDarkThemeActive(self) else "black"), "Step forward", self)
+		activity_log_toolbar.addAction(self.step_forward_action)
+
+		activity_log_page_layout.addWidget(activity_log_toolbar)
+
+		self.activity_log_page_splitter = QSplitter(Qt.Vertical)
+
+		self.activity_log_table = ResponsiveTableWidget(0, [])
+		self.activity_log_table.setSelectionMode(QTableWidget.SingleSelection)
+		self.activity_log_table.cellClicked.connect(self.show_notes)
+		self.activity_log_table.currentCellChanged.connect(self.show_notes)
+		
+		self.activity_log_page_splitter.addWidget(self.activity_log_table)
+
+		self.notes_stacked_widget = QStackedWidget()
+		self.notes_stacked_widget.hide()
+
+		self.activity_log_page_splitter.addWidget(self.notes_stacked_widget)
+
+		activity_log_page_layout.addWidget(self.activity_log_page_splitter)
 
 		stacked_widget.addWidget(flowchart_page)
-		stacked_widget.addWidget(activity_log_page)
+		stacked_widget.addWidget(self.activity_log_page)
 
 		self.setCentralWidget(stacked_widget)
 
@@ -82,14 +113,14 @@ class MainWindow(QMainWindow):
 		toolbar_actions = QActionGroup(self)
 		toolbar_actions.setExclusive(True)
 
-		self.progress_page_button = QAction(qta.icon("fa5s.project-diagram"), "Progress", self)
+		self.progress_page_button = QAction(qta.icon("fa5s.project-diagram", color="white" if isDarkThemeActive(self) else "black"), "Progress", self)
 		self.progress_page_button.triggered.connect(lambda: stacked_widget.setCurrentIndex(0))
 		self.progress_page_button.setCheckable(True)
 		self.progress_page_button.setChecked(True)
 		toolbar_actions.addAction(self.progress_page_button)
 		self.toolbar.addAction(self.progress_page_button)
 
-		self.activity_log_page_button = QAction(qta.icon("fa5s.history"), "Activity log", self)
+		self.activity_log_page_button = QAction(qta.icon("fa5s.history", color="white" if isDarkThemeActive(self) else "black"), "Activity log", self)
 		self.activity_log_page_button.triggered.connect(lambda: stacked_widget.setCurrentIndex(1))
 		self.activity_log_page_button.setCheckable(True)
 		self.activity_log_page_button.setChecked(False)
@@ -98,22 +129,22 @@ class MainWindow(QMainWindow):
 
 		self.toolbar.addSeparator()
 
-		self.read_process_memory_button = QAction(qta.icon("fa5s.syringe", color="white" if self.isDarkThemeActive() else "black"), "Read process memory", self)
+		self.read_process_memory_button = QAction(qta.icon("fa5s.syringe", color="white" if isDarkThemeActive(self) else "black"), "Read process memory", self)
 		self.read_process_memory_button.triggered.connect(self.readProcessMemory)
 		self.read_process_memory_button.setCheckable(False)
 		self.toolbar.addAction(self.read_process_memory_button)
 
-		self.iat_reconstruction_button = QAction(qta.icon("fa5s.tools", color="white" if self.isDarkThemeActive() else "black"), "Unpack", self)
+		self.iat_reconstruction_button = QAction(qta.icon("fa5s.tools", color="white" if isDarkThemeActive(self) else "black"), "Unpack", self)
 		self.iat_reconstruction_button.triggered.connect(self.iatReconstruct)
 		self.iat_reconstruction_button.setCheckable(False)
 		self.toolbar.addAction(self.iat_reconstruction_button)
 
-		self.unpack_button = QAction(qta.icon("fa5s.box-open", color="white" if self.isDarkThemeActive() else "black"), "Unpack", self)
+		self.unpack_button = QAction(qta.icon("fa5s.box-open", color="white" if isDarkThemeActive(self) else "black"), "Unpack", self)
 		self.unpack_button.triggered.connect(self.unpack)
 		self.unpack_button.setCheckable(False)
 		self.toolbar.addAction(self.unpack_button)
 
-		self.setStatusBar(QStatusBar(self))
+		# top menu
 
 		menubar = self.menuBar()
 		file_menu = menubar.addMenu('File')
@@ -183,7 +214,6 @@ class MainWindow(QMainWindow):
 		update_tools_exec_action.triggered.connect(self.executablesFinderStart)
 		options_menu.addAction(update_tools_exec_action)
 
-
 		layout = QVBoxLayout()
 		layout.addWidget(stacked_widget)
 
@@ -194,7 +224,9 @@ class MainWindow(QMainWindow):
 		# Impostare il widget principale come widget centrale della finestra principale
 		self.setCentralWidget(main_widget)
 
-		# status bar 
+		# status bar
+
+		self.setStatusBar(QStatusBar(self))
 
 		self.spinner_label = QLabel(self)
 		self.spinner_label.setFixedSize(25, 25)
@@ -243,8 +275,8 @@ class MainWindow(QMainWindow):
 		self.statusBar().showMessage(message)
 		
 	def updateAnalysisProgress(self):
-		
-		last_row = 0#self.activity_log_table.rowCount()
+
+		last_row = self.activity_log_table.rowCount()
 
 		for node_id in self.analysis.activities:
 			self.flowchart.setOpacity(1, node_id)
@@ -256,22 +288,18 @@ class MainWindow(QMainWindow):
 
 			if row == self.activity_log_table.rowCount():
 				self.activity_log_table.insertRow(row)
+
+			notes_edit_view = MardownEdit(isDarkThemeActive(self))
+			notes_edit_view.textUpdated.connect(self.updateLogEntryNotes)
+			self.notes_stacked_widget.addWidget(notes_edit_view)
 			
 			if column_count > self.activity_log_table.columnCount():
 				self.activity_log_table.setColumnCount(column_count)
 				self.activity_log_table.setHorizontalHeaderLabels(columns.keys())
 
 			for col, (_, value) in enumerate(columns.items()):
-
-				if self.activity_log_table.horizontalHeaderItem(col).text() == 'notes':
-					html_value = markdown.markdown(value)
-					markdown_view = QTextEdit()
-					markdown_view.setReadOnly(True)
-					markdown_view.setHtml(html_value)
-
-					self.activity_log_table.setCellWidget(row, col, markdown_view)
-				else:
-					self.activity_log_table.setItem(row, col, QTableWidgetItem(value))
+				item = QTableWidgetItem(value)
+				self.activity_log_table.setItem(row, col, item)
 
 	def executablesFinderStart(self):
 		message_index = self.messages.add('Looking for executables')
@@ -383,12 +411,21 @@ class MainWindow(QMainWindow):
 			self.light_mode_action.setChecked(True)
 
 		qdarktheme.setup_theme(theme)
-		self.flowchart.setEdgesColor(Qt.white if self.isDarkThemeActive() else Qt.black)
-		self.progress_page_button.setIcon(qta.icon("fa5s.project-diagram", color="white" if self.isDarkThemeActive() else "black"))
-		self.unpack_button.setIcon(qta.icon("fa5s.box-open", color="white" if self.isDarkThemeActive() else "black"))
-		self.iat_reconstruction_button.setIcon(qta.icon("fa5s.tools", color="white" if self.isDarkThemeActive() else "black"))
-		self.activity_log_page_button.setIcon(qta.icon("fa5s.history", color="white" if self.isDarkThemeActive() else "black"))
-		self.read_process_memory_button.setIcon(qta.icon("fa5s.syringe", color="white" if self.isDarkThemeActive() else "black"))
+
+		dark_mode = isDarkThemeActive(self)
+
+		self.flowchart.setEdgesColor(Qt.white if dark_mode else Qt.black)
+		self.progress_page_button.setIcon(qta.icon("fa5s.project-diagram", color="white" if dark_mode else "black"))
+		self.unpack_button.setIcon(qta.icon("fa5s.box-open", color="white" if dark_mode else "black"))
+		self.iat_reconstruction_button.setIcon(qta.icon("fa5s.tools", color="white" if dark_mode else "black"))
+		self.activity_log_page_button.setIcon(qta.icon("fa5s.history", color="white" if dark_mode else "black"))
+		self.read_process_memory_button.setIcon(qta.icon("fa5s.syringe", color="white" if dark_mode else "black"))
+		self.play_action.setIcon(qta.icon("fa5s.play", color="white" if dark_mode else "black"))
+		self.stop_action.setIcon(qta.icon("fa5s.pause", color="white" if dark_mode else "black"))
+		self.step_forward_action.setIcon(qta.icon("fa5s.step-forward", color="white" if dark_mode else "black"))
+
+		for index in range(self.notes_stacked_widget.count()):
+			self.notes_stacked_widget.widget(index).setDarkMode(dark_mode)
 
 	def openFlowchartNodeContextMenu(self, node_id, mouse_pos):
 		context_menu = QMenu(self)
@@ -428,7 +465,7 @@ class MainWindow(QMainWindow):
 		for tool in self.analysis.workflow['workflow']['nodes'][node_id]['tools']:
 			coverage[tool] = tool in executables
 
-		tools_coverage_dialog = ToolsCoverageDialog(coverage, self.isDarkThemeActive())
+		tools_coverage_dialog = ToolsCoverageDialog(coverage, isDarkThemeActive(self))
 		tools_coverage_dialog.exec_()
 
 	def openTool(self, node_id):
@@ -463,39 +500,13 @@ class MainWindow(QMainWindow):
 						elif platform.system() == "Linux":
 							subprocess.Popen(["x-terminal-emulator", "-e", executable], shell=True, close_fds=True, start_new_session=True)
 	
-	def activity_log_table_double_click(self, item):
-		row = item.row()
-		col = item.column()
+	def show_notes(self, row, col):
+		self.notes_stacked_widget.show()
+		self.notes_stacked_widget.setCurrentIndex(row)
 	
-		col_header = self.activity_log_table.horizontalHeaderItem(col).text()
-
-		if col_header == 'notes':
-			log_entry = self.analysis.get_activity_log_entry(row)
-
-			dialog = TextBoxDialog('Write your notes', log_entry.notes, self.isDarkThemeActive())
-			result = dialog.exec_()
-
-			if result == QDialog.Accepted:
-				note = dialog.getText()
-				self.analysis.update_log_entry_notes(row, note)
-				
-				html_value = markdown.markdown(note)
-				markdown_view = QTextEdit()
-				markdown_view.setReadOnly(True)
-				markdown_view.setHtml(html_value)
-
-				self.activity_log_table.setCellWidget(row, col, markdown_view)
-
-	def isDarkThemeActive(self):
-
-		# Check the color role for the WindowText color
-		background_color = self.palette().color(self.backgroundRole())
-
-		# Calculate the overall brightness of the color
-		brightness = (background_color.red() * 299 + background_color.green() * 587 + background_color.blue() * 114) / 1000
-
-		# If the brightness is less than a threshold, consider it a dark theme
-		return brightness < 128
+	def updateLogEntryNotes(self, note):
+		log_row = self.notes_stacked_widget.currentIndex()
+		self.analysis.update_log_entry_notes(log_row, note)
 
 	def close(self) -> bool:
 		return super().close()
