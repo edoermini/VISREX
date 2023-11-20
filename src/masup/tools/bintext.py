@@ -7,7 +7,7 @@ import random
 import string
 import time
 
-class BinText(DesktopTool):
+class Tool(DesktopTool):
     def __init__(self, path: str):
         super().__init__(path)
 
@@ -18,7 +18,7 @@ class BinText(DesktopTool):
 
         self.strings:list[dict[str:any]] = []
     
-    def scan(self):
+    def execute(self):
         self.library.click('name:Go')
 
         tmp_file = os.path.join(Path.home(),f"{''.join(random.choices(string.ascii_uppercase + string.digits, k=8))}.txt")

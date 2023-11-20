@@ -1,6 +1,6 @@
 from masup.tools.generics import CLITool
 
-class UPX(CLITool):
+class Tool(CLITool):
     def __init__(self, path: str):
         super().__init__(path)
 
@@ -9,7 +9,7 @@ class UPX(CLITool):
     def set_output(self, file:str):
         self.output = file
 
-    def decompress(self, packed_file:str):
+    def execute(self, packed_file:str):
         args = ['-d',]
 
         if self.output:

@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QMenu, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QTableWidgetItem, QFileDialog, QDialog, QLabel, QSplitter, QTableWidget
+from PyQt6.QtWidgets import QMenu, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QTableWidgetItem, QFileDialog, QDialog, QLabel, QSplitter, QTableWidget, QMessageBox
 from PyQt6.QtCore import Qt, QSize, QTimer, QThread
-from PyQt6.QtGui import QMovie, QAction, QActionGroup
+from PyQt6.QtGui import QMovie, QAction, QActionGroup, QColor
 import qtawesome as qta
 import qdarktheme
 import os
@@ -9,7 +9,7 @@ from time import time
 from functools import partial
 import subprocess
 import platform
-import markdown
+import importlib
 
 from gui.updaters import ActivityUpdater, ExecutablesUpdater
 from gui.dialogs import ReadProcessMemoryDialog, ComboBoxDialog, ToolsCoverageDialog, IATReconstructionDialog, TextBoxDialog
@@ -20,6 +20,7 @@ from gui.widgets import MardownEdit
 from gui.utils import isDarkThemeActive
 
 from analysis import Analysis, AnalysisLogEntry
+from masup.importer import get_tool
 
 
 if platform.system() == "Windows":
@@ -33,6 +34,8 @@ class MainWindow(QMainWindow):
 		self.malware_sample = malware_sample
 		self.analysis_file = analysis_file
 		self.messages = StatusMessagesQueue()
+		self.replay_started = False
+		self.replay_index = 0
 		self.analysis = None
 
 		if self.malware_sample is not None:
@@ -70,14 +73,20 @@ class MainWindow(QMainWindow):
 		activity_log_toolbar = QToolBar(self)
 		
 		self.play_action = QAction(qta.icon("fa5s.play", color="white" if isDarkThemeActive(self) else "black"), "Play", self)
+		self.play_action.setDisabled(True)
+		self.play_action.triggered.connect(self.play_clicked)
 		activity_log_toolbar.addAction(self.play_action)
 
-		self.stop_action = QAction(qta.icon("fa5s.pause", color="white" if isDarkThemeActive(self) else "black"), "Stop", self)
+		self.stop_action = QAction(qta.icon("fa5s.stop", color="white" if isDarkThemeActive(self) else "black"), "Stop", self)
+		self.stop_action.setDisabled(True)
+		self.stop_action.triggered.connect(self.stop_clicked)
 		activity_log_toolbar.addAction(self.stop_action)
 		
 		activity_log_toolbar.addSeparator()
 
 		self.step_forward_action = QAction(qta.icon("fa5s.step-forward", color="white" if isDarkThemeActive(self) else "black"), "Step forward", self)
+		self.step_forward_action.setDisabled(True)
+		self.step_forward_action.triggered.connect(self.execute_activity)
 		activity_log_toolbar.addAction(self.step_forward_action)
 
 		activity_log_page_layout.addWidget(activity_log_toolbar)
@@ -86,8 +95,8 @@ class MainWindow(QMainWindow):
 
 		self.activity_log_table = ResponsiveTableWidget(0, [])
 		self.activity_log_table.setSelectionMode(QTableWidget.SingleSelection)
-		self.activity_log_table.cellClicked.connect(self.show_notes)
-		self.activity_log_table.currentCellChanged.connect(self.show_notes)
+		self.activity_log_table.cellClicked.connect(self.cell_selected)
+		self.activity_log_table.currentCellChanged.connect(self.cell_selected)
 		
 		self.activity_log_page_splitter.addWidget(self.activity_log_table)
 
@@ -217,11 +226,9 @@ class MainWindow(QMainWindow):
 		layout = QVBoxLayout()
 		layout.addWidget(stacked_widget)
 
-		# Creare un widget principale e impostare il layout principale
 		main_widget = QWidget()
 		main_widget.setLayout(layout)
 
-		# Impostare il widget principale come widget centrale della finestra principale
 		self.setCentralWidget(main_widget)
 
 		# status bar
@@ -282,6 +289,10 @@ class MainWindow(QMainWindow):
 			self.flowchart.setOpacity(1, node_id)
 
 		for i, log_entry in enumerate(self.analysis.get_activity_log(last_row)):
+			
+			if not self.play_action.isEnabled():
+				self.play_action.setDisabled(False)
+
 			row = last_row + i
 			columns = log_entry.to_json(string_values=True)
 			column_count = len(columns)
@@ -351,14 +362,13 @@ class MainWindow(QMainWindow):
 
 			self.analysis.update_activity_log(
 				AnalysisLogEntry(
-					"",
+					"self",
 					"Read process memory",
 					"",
 					[f"{read_process_memory.getProcessName()}, {read_process_memory.getStartAddress()}, {read_process_memory.getBytesLength()}"],
 					"",
 					time()
-				)
-				
+				)	
 			)
 		
 	def unpack(self):
@@ -421,7 +431,7 @@ class MainWindow(QMainWindow):
 		self.activity_log_page_button.setIcon(qta.icon("fa5s.history", color="white" if dark_mode else "black"))
 		self.read_process_memory_button.setIcon(qta.icon("fa5s.syringe", color="white" if dark_mode else "black"))
 		self.play_action.setIcon(qta.icon("fa5s.play", color="white" if dark_mode else "black"))
-		self.stop_action.setIcon(qta.icon("fa5s.pause", color="white" if dark_mode else "black"))
+		self.stop_action.setIcon(qta.icon("fa5s.stop", color="white" if dark_mode else "black"))
 		self.step_forward_action.setIcon(qta.icon("fa5s.step-forward", color="white" if dark_mode else "black"))
 
 		for index in range(self.notes_stacked_widget.count()):
@@ -500,13 +510,68 @@ class MainWindow(QMainWindow):
 						elif platform.system() == "Linux":
 							subprocess.Popen(["x-terminal-emulator", "-e", executable], shell=True, close_fds=True, start_new_session=True)
 	
-	def show_notes(self, row, col):
+	def cell_selected(self, row, col):
+		# notes
 		self.notes_stacked_widget.show()
 		self.notes_stacked_widget.setCurrentIndex(row)
+		
+		if not self.replay_started:
+			self.replay_index = row
 	
 	def updateLogEntryNotes(self, note):
 		log_row = self.notes_stacked_widget.currentIndex()
 		self.analysis.update_log_entry_notes(log_row, note)
+	
+	def play_clicked(self):
+
+		self.play_action.setDisabled(True)
+		self.stop_action.setDisabled(False)
+		self.step_forward_action.setDisabled(False)
+		self.replay_started = True
+
+		self.execute_activity()
+	
+	def stop_clicked(self):
+		self.play_action.setDisabled(False)
+		self.stop_action.setDisabled(True)
+		self.step_forward_action.setDisabled(True)
+		self.replay_index = 0
+		self.replay_started = False
+	
+	def execute_activity(self):
+
+		if self.replay_index > 0:
+			for col in range(self.activity_log_table.columnCount()):
+				item = self.activity_log_table.item(self.replay_index-1, col)
+				item.setBackground(Qt.transparent)
+			
+		if self.replay_index == self.activity_log_table.rowCount():
+			self.stop_clicked()
+			return
+		
+		for col in range(self.activity_log_table.columnCount()):
+			item = self.activity_log_table.item(self.replay_index, col)
+			item.setBackground(QColor('red'))
+
+		self.activity_log_table.setCurrentCell(self.replay_index, self.activity_log_table.currentColumn())
+
+		log_entry = self.analysis.get_activity_log_entry(self.replay_index)
+
+		if log_entry.tool != 'self':
+			tool_module = get_tool(log_entry.tool)
+
+			print(self.replay_index)
+
+			if tool_module:
+				tool = tool_module.Tool(log_entry.executable)
+			else:
+				error_dialog = QMessageBox(self)
+				error_dialog.setIcon(QMessageBox.Warning)
+				error_dialog.setWindowTitle("Error")
+				error_dialog.setText(f"Automations for tool {log_entry.tool} are not available yet\nFollow the notes written by the author")
+				error_dialog.exec_()
+		
+		self.replay_index += 1
 
 	def close(self) -> bool:
 		return super().close()

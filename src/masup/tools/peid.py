@@ -8,7 +8,7 @@ class PEiD(DesktopTool):
         self.load_file_button_locator = r'name:...'
         self.open_file_pop_up_window_locator = r'name:"Choose the file to open..."'
     
-    def get_packer(self):
+    def execute(self):
 
         packer_box = self.library.get_elements('type:Edit name:"File:"')[1]
         return self.library.get_value(packer_box)

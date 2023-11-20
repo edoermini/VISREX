@@ -1,7 +1,12 @@
 from abc import ABC, abstractmethod
 import subprocess
-from RPA.Windows import Windows
+import platform
 import pyperclip
+
+if platform.system() == 'Windows':
+    from RPA.Windows import Windows as Library
+elif platform.system() == 'Linux':
+    from RPA.Desktop import Desktop as Library
 
 class DesktopTool(ABC):
     
@@ -13,7 +18,7 @@ class DesktopTool(ABC):
         self.clipboard = ""
 
         self.path = path
-        self.library = Windows()
+        self.library = Library()
     
     def update_clipboard(self):
         self.clipboard = ""

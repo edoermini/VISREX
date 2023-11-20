@@ -2,7 +2,7 @@ from masup.tools.generics import DesktopTool
 import tempfile
 import os
 
-class Scylla(DesktopTool):
+class Tool(DesktopTool):
     def __init__(self, path: str):
         super().__init__(path)
 
