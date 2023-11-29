@@ -7,7 +7,7 @@ class Tool(DesktopTool):
         super().__init__(path)
 
         self.window_locator = r'regex:"^Scylla.*"'
-        self.load_file_button_locator = r'name:...'
+        self.load_file_locator = r'name:...'
         self.open_file_pop_up_window_locator = r'name:"Open file..."'
 
     def attach_to_process(self, executable_name):

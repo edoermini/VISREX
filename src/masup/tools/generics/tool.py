@@ -13,15 +13,22 @@ class DesktopTool(ABC):
     @abstractmethod
     def __init__(self, path):
         self.window_locator = r''
-        self.load_file_button_locator = r''
+        self.load_file_locator = r''
         self.open_file_pop_up_window_locator = r''
         self.clipboard = ""
 
         self.path = path
         self.library = Library()
     
+    @abstractmethod
+    def execute(self, *args, **kwargs):
+        pass
+    
     def update_clipboard(self):
         self.clipboard = ""
+
+    def attach(self):
+        self._control_window()
 
     def run(self):
         """Opens the application"""
@@ -37,7 +44,8 @@ class DesktopTool(ABC):
         )
     
     def load_sample_from_gui(self, sample_path):
-        self.library.click(self.load_file_button_locator)
+        self.library.click(self.load_file_locator)
+        self.library.set_anchor(self.open_file_pop_up_window_locator)
         self.library.send_keys(self.open_file_pop_up_window_locator,sample_path+'{ENTER}')
     
     def click(self, locator):
@@ -66,6 +74,9 @@ class CLITool(ABC):
 
         self.stdout = stdout.decode('utf-8')
         self.stderr = stderr.decode('utf-8')
+    
+    def execute(self, *args, **kwargs):
+        self._run(kwargs['arguments'])
     
     def get_output(self) -> str:
         return self.stdout

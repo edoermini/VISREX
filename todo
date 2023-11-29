@@ -10,3 +10,7 @@
 - [ ] bordare attivita con bordo tratteggiato
 - [ ] mettere la finestra di default splittata
 
+- [x] progress bar verticale con bordi
+- [ ] ordinamento tabella di copertura dei tool e/o ordine alfabetico
+- [ ] aggiungere sfondo png ma non in svg
+- [ ] possibilità di rimuovere attività

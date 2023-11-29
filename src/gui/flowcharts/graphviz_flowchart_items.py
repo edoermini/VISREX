@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QGraphicsItem, QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsPolygonItem, QGraphicsSceneContextMenuEvent, QGraphicsSceneHoverEvent, QGraphicsTextItem, QGraphicsItemGroup, QGraphicsPathItem
 from PyQt6.QtGui import QColor, QBrush, QPolygonF, QPen, QPainterPath, QFont, QPainter
-from PyQt6.QtCore import Qt, QPointF
+from PyQt6.QtCore import Qt, QPointF, QRectF
 
 import xml.etree.ElementTree as ET
 import re
@@ -8,24 +8,45 @@ import re
 from .signals import GraphvizFlowchartNodeSignals
 
 class ProgressBarItem(QGraphicsRectItem):
-	def __init__(self, x, y, width, color:QColor, progress_percentage:float=1, parent=None):
-		super().__init__(x, y, width, 2, parent)
+	def __init__(self, x, y, width, max_height, color:QColor, border_color:QColor, progress_percentage:float=1, parent=None):
+		super().__init__(x, y, width, 0, parent)
+
+		self.coord_y = y
+		self.coord_x = x
 		self.progress_percentage = progress_percentage  # Default progress percentage
 		self.color = color
+		self.border_color = border_color
+		self.max_height = max_height
+		self.width= width
+		self.setBrush(QBrush(self.color, Qt.SolidPattern))
+		self.setPen(QPen(Qt.NoPen))
+
+		self.setZValue(2)
 
 	def paint(self, painter: QPainter, option, widget=None):
 		painter.setRenderHint(painter.Antialiasing)  # Optional, for smoother drawing
 
+		new_height = self.max_height * self.progress_percentage
+
 		# Draw the progress bar
 		progress_rect = self.rect()
-		progress_rect.setWidth(progress_rect.width() * self.progress_percentage)
+		progress_rect.setY(self.coord_y + (self.max_height - new_height))
+		progress_rect.setHeight(new_height)
+
+		# border rect
+		border_rect = QRectF(self.coord_x, self.coord_y, self.width, self.max_height)
+
+		painter.setPen(QPen(self.border_color, 0.5, Qt.SolidLine))
+		painter.drawRect(border_rect)
 
 		painter.setPen(QPen(Qt.NoPen))
 		painter.setBrush(QBrush(self.color, Qt.SolidPattern))  # Green color for the progress bar
 		painter.drawRect(progress_rect)
-
+	
 	def setProgressPercentage(self, percentage):
 		if 0 <= percentage <= 1:
+			#new_height = self.max_height * percentage
+			#self.updateHeight(new_height)
 			self.progress_percentage = percentage
 			self.update()
 
@@ -136,6 +157,8 @@ class GraphvizFlowchartEdge(GraphvizFlowchartItem):
 
 		self.addToGroup(self.item)
 
+		self.setZValue(0)
+
 		self.set_label(self.item, painter_path.pointAtPercent(0.5), self.color)
 	
 	def setColor(self, color:QColor):
@@ -143,8 +166,6 @@ class GraphvizFlowchartEdge(GraphvizFlowchartItem):
 		self.arrow.setPen(QPen(QBrush(color), 1, Qt.SolidLine))
 		self.line.setPen(QPen(color, 1, Qt.SolidLine))
 		self.label.setDefaultTextColor(color)
-	
-
 
 class GraphvizFlowchartDecision(GraphvizFlowchartItem):
 
@@ -244,12 +265,13 @@ class GraphvizFlowchartProcess(GraphvizFlowchartItem):
 		self.item.setPen(QPen(QBrush(self.color), 0, Qt.SolidLine))
 		self.item.setAcceptHoverEvents(False)
 
+		self.set_label(self.item, self.item.boundingRect().center())
+
 		self.addToGroup(self.item)
 
-		self.progress_bar = ProgressBarItem(x, y+height+2.5, width, self.color, 0.5)
+		self.progress_bar = ProgressBarItem(x + width+5, y, 3, height, self.color, self.color)
 		self.addToGroup(self.progress_bar)
-
-		self.set_label(self.item, self.item.boundingRect().center())
+		self.setZValue(1)
 	
 	def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent | None) -> None:
 		pen = self.item.pen()

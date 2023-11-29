@@ -9,7 +9,7 @@ from time import time
 from functools import partial
 import subprocess
 import platform
-import importlib
+from pathlib import Path
 
 from gui.updaters import ActivityUpdater, ExecutablesUpdater
 from gui.dialogs import ReadProcessMemoryDialog, ComboBoxDialog, ToolsCoverageDialog, IATReconstructionDialog, TextBoxDialog
@@ -21,26 +21,26 @@ from gui.utils import isDarkThemeActive
 
 from analysis import Analysis, AnalysisLogEntry
 from masup.importer import get_tool
+from masup.tools.generics import DesktopTool, CLITool
 
 
 if platform.system() == "Windows":
-	from masup.tools import Scylla
+	from masup.tools import scylla
 
 
 class MainWindow(QMainWindow):
 	def __init__(self, malware_sample=None, analysis_file=None):
 		super(MainWindow, self).__init__()
 
-		self.malware_sample = malware_sample
+		self.malware_sample = Path(malware_sample)
 		self.analysis_file = analysis_file
 		self.messages = StatusMessagesQueue()
 		self.replay_started = False
 		self.replay_index = 0
 		self.analysis = None
 
-		if self.malware_sample is not None:
-			self.malware_sample = os.path.basename(self.malware_sample)
-			self.analysis = Analysis(self.malware_sample)
+		if malware_sample is not None:
+			self.analysis = Analysis(os.path.basename(malware_sample))
 		
 		else:
 			with open(self.analysis_file, "rb") as file:
@@ -88,6 +88,11 @@ class MainWindow(QMainWindow):
 		self.step_forward_action.setDisabled(True)
 		self.step_forward_action.triggered.connect(self.execute_activity)
 		activity_log_toolbar.addAction(self.step_forward_action)
+
+		self.skip_action = QAction(qta.icon('fa5s.redo-alt', color="white" if isDarkThemeActive(self) else "black"), "Skip", self)
+		self.skip_action.setDisabled(True)
+		self.skip_action.triggered.connect(self.skip_activity)
+		activity_log_toolbar.addAction(self.skip_action)
 
 		activity_log_page_layout.addWidget(activity_log_toolbar)
 
@@ -395,7 +400,7 @@ class MainWindow(QMainWindow):
 				if executable_dialog_result == QDialog.Accepted:
 
 					if tool == 'scylla':
-						scylla = Scylla(executable_dialog.getSelected())
+						scylla = scylla.Tool(executable_dialog.getSelected())
 						scylla.run()
 						scylla.attach_to_process(self.analysis.malware_sample)
 						scylla.set_oep(oep)
@@ -514,46 +519,35 @@ class MainWindow(QMainWindow):
 		# notes
 		self.notes_stacked_widget.show()
 		self.notes_stacked_widget.setCurrentIndex(row)
-		
-		if not self.replay_started:
-			self.replay_index = row
 	
 	def updateLogEntryNotes(self, note):
 		log_row = self.notes_stacked_widget.currentIndex()
 		self.analysis.update_log_entry_notes(log_row, note)
 	
 	def play_clicked(self):
-
+		
+		self.activity_updater.stop()
 		self.play_action.setDisabled(True)
 		self.stop_action.setDisabled(False)
 		self.step_forward_action.setDisabled(False)
+		self.skip_action.setDisabled(False)
 		self.replay_started = True
 
 		self.execute_activity()
 	
 	def stop_clicked(self):
+		self.activity_updater.start()
+
 		self.play_action.setDisabled(False)
 		self.stop_action.setDisabled(True)
 		self.step_forward_action.setDisabled(True)
+		self.skip_action.setDisabled(True)
 		self.replay_index = 0
 		self.replay_started = False
 	
 	def execute_activity(self):
 
-		if self.replay_index > 0:
-			for col in range(self.activity_log_table.columnCount()):
-				item = self.activity_log_table.item(self.replay_index-1, col)
-				item.setBackground(Qt.transparent)
-			
-		if self.replay_index == self.activity_log_table.rowCount():
-			self.stop_clicked()
-			return
-		
-		for col in range(self.activity_log_table.columnCount()):
-			item = self.activity_log_table.item(self.replay_index, col)
-			item.setBackground(QColor('red'))
-
-		self.activity_log_table.setCurrentCell(self.replay_index, self.activity_log_table.currentColumn())
+		self.highlight_activity()
 
 		log_entry = self.analysis.get_activity_log_entry(self.replay_index)
 
@@ -562,16 +556,56 @@ class MainWindow(QMainWindow):
 
 			print(self.replay_index)
 
-			if tool_module:
-				tool = tool_module.Tool(log_entry.executable)
-			else:
+			if not tool_module:
 				error_dialog = QMessageBox(self)
 				error_dialog.setIcon(QMessageBox.Warning)
 				error_dialog.setWindowTitle("Error")
 				error_dialog.setText(f"Automations for tool {log_entry.tool} are not available yet\nFollow the notes written by the author")
 				error_dialog.exec_()
+				
+			else:
+				tool = tool_module.Tool(log_entry.executable)
+
+				if log_entry.activity == 'Open tool':
+					tool.execute(arguments=log_entry.arguments, malware=str(self.malware_sample))
+
+				elif log_entry.activity == 'Close tool':
+					if isinstance(tool, DesktopTool):
+						tool.attach()
+						tool.close()
+
+		if self.replay_index == self.activity_log_table.rowCount()-1:
+			self.stop_clicked()
+
+			for col in range(self.activity_log_table.columnCount()):
+				item = self.activity_log_table.item(self.replay_index, col)
+				item.setBackground(Qt.transparent)
 		
 		self.replay_index += 1
+	
+	def skip_activity(self):
+		self.highlight_activity()
+
+		if self.replay_index == self.activity_log_table.rowCount()-1:
+			self.stop_clicked()
+
+			for col in range(self.activity_log_table.columnCount()):
+				item = self.activity_log_table.item(self.replay_index, col)
+				item.setBackground(Qt.transparent)
+		
+		self.replay_index += 1
+	
+	def highlight_activity(self):
+		if self.replay_index > 0:
+			for col in range(self.activity_log_table.columnCount()):
+				item = self.activity_log_table.item(self.replay_index-1, col)
+				item.setBackground(Qt.transparent)
+		
+		for col in range(self.activity_log_table.columnCount()):
+			item = self.activity_log_table.item(self.replay_index, col)
+			item.setBackground(QColor('red'))
+
+		self.activity_log_table.setCurrentCell(self.replay_index, self.activity_log_table.currentColumn())
 
 	def close(self) -> bool:
 		return super().close()
