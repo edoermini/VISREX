@@ -56,4 +56,10 @@ class MainDialog(QDialog):
         self.accept()
         self.setResult(QDialog.Rejected)
 
+    def exec_(self) -> int:
+        self.new_analysis = False
+        self.open_analysis = False
+        
+        return super().exec() 
+
 

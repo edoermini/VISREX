@@ -11,11 +11,15 @@ import xml.etree.ElementTree as ET
 from .graphviz_flowchart_items import GraphvizFlowchartEdge, GraphvizFlowchartDecision, GraphvizFlowchartProcess
 from .signals import GraphzivFlowchartSignals
 
+from gui.utils import is_light_color
+
 class GraphvizFlowchart(QGraphicsView):
-	def __init__(self, dot:Digraph, edges_color:QColor = Qt.black, parent = None):
+	def __init__(self, dot:Digraph, edges_color:QColor = QColor(Qt.black), not_active_opacity:float = 0.3, parent = None):
 		super().__init__(parent=parent)
 
 		self.signals = GraphzivFlowchartSignals()
+
+		self.not_active_opacity = not_active_opacity
 
 		svg_file = dot.pipe(format='svg')
 		svg_stream = io.BytesIO(svg_file)
@@ -138,6 +142,11 @@ class GraphvizFlowchart(QGraphicsView):
 			ellipse = node.find('.//{http://www.w3.org/2000/svg}ellipse')
 			text = node.find('.//{http://www.w3.org/2000/svg}text')
 			title = node.find('.//{http://www.w3.org/2000/svg}title')
+			
+			percentage = 0
+
+			if title.text in self.nodes:
+				percentage = self.nodes[title.text].progress_bar.progress_percentage
 
 			xml_ellipse_str = ""
 			xml_text_str = ""
@@ -149,19 +158,24 @@ class GraphvizFlowchart(QGraphicsView):
 				xml_text_str = ET.tostring(text, encoding='unicode')
 			
 			flowchart_node = GraphvizFlowchartProcess(title.text, self.viewbox[3], xml_ellipse_str, xml_text_str)
+			flowchart_node.setProgressPercentage(percentage)
+
 			flowchart_node.signals.rightClick.connect(self.nodeRightClick)
 			self.gscene.addItem(flowchart_node)
 
 			self.nodes[title.text] = flowchart_node
 
-	def setOpacity(self, opacity: float, node_id : str = None):
+	def setActive(self, active: bool, node_id : str = None):
 		if not node_id:
 			for _, flowchart_item in self.nodes.items():
-				flowchart_item.setOpacity(opacity)
+				flowchart_item.setActive(active)
 		
 		else:
-			self.nodes[node_id].setOpacity(opacity)
+			self.nodes[node_id].setActive(active)
 	
+	def isActive(self, node_id:str):
+		return self.nodes[node_id].isActive()
+
 	def nodeRightClick(self, node_id, mouse_pos):
 		self.signals.rightClick.emit(node_id, mouse_pos)
 	
@@ -191,8 +205,35 @@ class GraphvizFlowchart(QGraphicsView):
 
 		# Create a QPainter to paint on the QPixmap
 		painter = QPainter(pixmap)
+		
+
+		print(self.gscene.backgroundBrush().color().red(), self.gscene.backgroundBrush().color().green(), self.gscene.backgroundBrush().color().blue())
+		
+		# Add background color
+		pixmap.fill(QColor(Qt.black) if is_light_color(self.edges_color) else QColor(Qt.white))
+
 		self.gscene.render(painter)
 		painter.end()
 
 		# Save the QPixmap to a PNG file
 		pixmap.save(filename)
+	
+	def redraw(self, dot:Digraph):
+		svg_file = dot.pipe(format='svg')
+		svg_stream = io.BytesIO(svg_file)
+
+		tree = ET.parse(svg_stream)
+		root = tree.getroot()
+		for elem in root.iter():
+			if 'fill' in elem.attrib and elem.attrib['fill'] == 'white':
+				elem.attrib['fill'] = 'none'
+
+		new_svg = io.BytesIO()
+		tree.write(new_svg)
+		new_svg.seek(0)
+
+		self.svg = new_svg.read().decode('utf-8')
+
+		self.gscene.clear()
+
+		self._draw_flowchart()

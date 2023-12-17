@@ -6,4 +6,4 @@ def get_tool(toolname):
     except ModuleNotFoundError:
         return None
     
-    return module.Tool
+    return module

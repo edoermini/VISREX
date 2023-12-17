@@ -7,6 +7,8 @@ import re
 
 from .signals import GraphvizFlowchartNodeSignals
 
+from gui.utils import make_color_darker, is_light_color
+
 class ProgressBarItem(QGraphicsRectItem):
 	def __init__(self, x, y, width, max_height, color:QColor, border_color:QColor, progress_percentage:float=1, parent=None):
 		super().__init__(x, y, width, 0, parent)
@@ -69,11 +71,12 @@ class GraphvizFlowchartItem(QGraphicsItemGroup):
 
 			self.label = QGraphicsTextItem(text.text)
 			self.label.setFont(QFont('Arial', pointSize=int(float(font_size))-5))
+			self.label.setAcceptHoverEvents(True)
 
 			if color is not None:
 				self.label.setDefaultTextColor(color)
 			else:
-				self.label.setDefaultTextColor(self._get_node_text_color(flowchart_item))
+				self.label.setDefaultTextColor(QColor(Qt.black) if is_light_color(flowchart_item.brush().color()) else QColor(Qt.white))
 
 			text_x = (center.x() - self.label.boundingRect().width() / 2)
 			text_y = (center.y() - self.label.boundingRect().height() / 2)
@@ -82,27 +85,7 @@ class GraphvizFlowchartItem(QGraphicsItemGroup):
 			self.label.setAcceptHoverEvents(False)
 
 			self.addToGroup(self.label)
-	
-	def _get_node_text_color(self, flowchart_item: QGraphicsItem):
-		background_color = flowchart_item.brush().color()
 
-		# Use rgba() to get color with opacity
-		rgba_color = background_color.rgba()
-
-		red = (rgba_color >> 24) & 0xFF
-		green = (rgba_color >> 16) & 0xFF
-		blue = (rgba_color >> 8) & 0xFF
-		alpha = rgba_color & 0xFF
-
-		# Calculate the luminance using the formula: Y = 0.299*R + 0.587*G + 0.114*B
-		luminance = 0.299 * red + 0.587 * green + 0.114 * blue
-
-		# Choose the text color based on the luminance
-		if luminance > 128 or alpha < 128:
-			return Qt.black
-		else:
-			return Qt.white
-		
 class GraphvizFlowchartEdge(GraphvizFlowchartItem):
 	def __init__(self, flowchart_height:float, xml_path: str, xml_polygon: str, color:QColor, xml_text:str = "", parent: QGraphicsItem = None):
 		super().__init__(flowchart_height, xml_text, parent)
@@ -175,6 +158,7 @@ class GraphvizFlowchartDecision(GraphvizFlowchartItem):
 		self.signals = GraphvizFlowchartNodeSignals()
 		self.setAcceptHoverEvents(True)
 		
+		self.active = False
 		self.node_id = node_id
 
 		polygon = ET.fromstring(xml_polygon)
@@ -196,9 +180,8 @@ class GraphvizFlowchartDecision(GraphvizFlowchartItem):
 
 		polygon_figure = QPolygonF([QPointF(x, y) for x, y in polygon_points])
 		self.item = QGraphicsPolygonItem(polygon_figure, self)
-		self.item.setBrush(self.color)
-		self.item.setPen(QPen(QBrush(self.color), 0, Qt.SolidLine))
 		self.item.setAcceptHoverEvents(False)
+		self.setActive(False)
 
 		self.addToGroup(self.item)
 
@@ -214,9 +197,23 @@ class GraphvizFlowchartDecision(GraphvizFlowchartItem):
 		pen.setWidth(0)
 		self.item.setPen(pen)
 	
-	def setOpacity(self, opacity: float) -> None:
-		self.item.setOpacity(opacity)
-		self.label.setDefaultTextColor(self._get_node_text_color(self.item))
+	def setActive(self, active: bool) -> None:
+		self.active = active
+
+		if active:
+			self.item.setBrush(self.color)
+			self.item.setPen(QPen(QBrush(self.color), 0, Qt.SolidLine))
+
+		else:
+			darker_color = make_color_darker(self.color, 0.5)
+
+			self.item.setBrush(darker_color)
+			self.item.setPen(QPen(QBrush(darker_color), 0, Qt.SolidLine))
+
+		self.label.setDefaultTextColor(QColor(Qt.black) if is_light_color(self.item.brush().color()) else QColor(Qt.white))	
+	
+	def isActive(self):
+		return self.active
 	
 	def contextMenuEvent(self, event: QGraphicsSceneContextMenuEvent | None) -> None:
 		mouse_pos = event.screenPos()
@@ -230,6 +227,7 @@ class GraphvizFlowchartProcess(GraphvizFlowchartItem):
 		self.signals = GraphvizFlowchartNodeSignals()
 		self.setAcceptHoverEvents(True)
 
+		self.active = False
 		self.node_id = node_id
 
 		ellipse = ET.fromstring(xml_ellipse)
@@ -261,9 +259,8 @@ class GraphvizFlowchartProcess(GraphvizFlowchartItem):
 		height = float(ry)*2
 
 		self.item = QGraphicsEllipseItem(x, y, width, height, self)
-		self.item.setBrush(self.color)
-		self.item.setPen(QPen(QBrush(self.color), 0, Qt.SolidLine))
 		self.item.setAcceptHoverEvents(False)
+		self.setActive(False)
 
 		self.set_label(self.item, self.item.boundingRect().center())
 
@@ -283,9 +280,23 @@ class GraphvizFlowchartProcess(GraphvizFlowchartItem):
 		pen.setWidth(0)
 		self.item.setPen(pen)
 	
-	def setOpacity(self, opacity: float) -> None:
-		self.item.setOpacity(opacity)
-		self.label.setDefaultTextColor(self._get_node_text_color(self.item))
+	def setActive(self, active: bool) -> None:
+		self.active = active
+
+		if active:
+			self.item.setBrush(self.color)
+			self.item.setPen(QPen(QBrush(self.color), 0, Qt.SolidLine))
+
+		else:
+			darker_color = make_color_darker(self.color, 0.5)
+
+			self.item.setBrush(darker_color)
+			self.item.setPen(QPen(QBrush(darker_color), 0, Qt.SolidLine))
+
+		self.label.setDefaultTextColor(QColor(Qt.black) if is_light_color(self.item.brush().color()) else QColor(Qt.white))
+	
+	def isActive(self):
+		return self.active
 	
 	def contextMenuEvent(self, event: QGraphicsSceneContextMenuEvent | None) -> None:
 		mouse_pos = event.screenPos()

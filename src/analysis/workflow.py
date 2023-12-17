@@ -11,47 +11,47 @@ class Workflow:
 				"name": "Malware sample" if not malware_executable else malware_executable,
 				"description": "",
 				"phase": "",
-				"color": "#4051B5",
+				"color": "",
 				"results": [],
 				"tools": []
 			  },
-			  "extr_0": {
-				"type": "decision",
-				"name": "Hidden from WinAPI",
-				"description": "",
-				"phase": "extraction",
-				"color": "#4051B5",
-				"results": [],
-				"tools": []
-			  },
-			  "extr_1": {
-				"type": "activity",
-				"name": "Automatic Extraction",
-				"description": "",
-				"phase": "extraction",
-				"color": "#4051B5",
-				"results": [],
-				"tools": []
-			  },
-			  "extr_2": {
-				"type": "activity",
-				"name": "Manual Extraction",
-				"description": "",
-				"phase": "extraction",
-				"color": "#4051B5",
-				"results": [],
-				"tools": []
-			  },
-			  "extr_3": {
-				"type": "activity",
-				"name": "Extract from archive",
-				"description": "",
-				"phase": "extraction",
-				"color": "#4051B5",
-				"results": [],
-				"tools": []
-			  },
-			  "pran_0": {
+			#   "extr_0": {
+			# 	"type": "decision",
+			# 	"name": "Hidden from WinAPI",
+			# 	"description": "",
+			# 	"phase": "extraction",
+			# 	"color": "#4051B5",
+			# 	"results": [],
+			# 	"tools": []
+			#   },
+			#   "extr_1": {
+			# 	"type": "activity",
+			# 	"name": "Automatic Extraction",
+			# 	"description": "",
+			# 	"phase": "extraction",
+			# 	"color": "#4051B5",
+			# 	"results": [],
+			# 	"tools": []
+			#   },
+			#   "extr_2": {
+			# 	"type": "activity",
+			# 	"name": "Manual Extraction",
+			# 	"description": "",
+			# 	"phase": "extraction",
+			# 	"color": "#4051B5",
+			# 	"results": [],
+			# 	"tools": []
+			#   },
+			#   "extr_3": {
+			# 	"type": "activity",
+			# 	"name": "Extract from archive",
+			# 	"description": "",
+			# 	"phase": "extraction",
+			# 	"color": "#4051B5",
+			# 	"results": [],
+			# 	"tools": []
+			#   },
+			  "exan_0": {
 				"type": "activity",
 				"name": "Identify the hash",
 				"description": "",
@@ -62,7 +62,7 @@ class Workflow:
 				  "pestudio"
 				]
 			  },
-			  "pran_1": {
+			  "exan_1": {
 				"type": "activity",
 				"name": "Check for malware",
 				"description": "",
@@ -74,7 +74,7 @@ class Workflow:
 				  "pestudio"
 				]
 			  },
-			  "pran_2": {
+			  "exan_2": {
 				"type": "activity",
 				"name": "Data in open sources",
 				"description": "",
@@ -83,7 +83,7 @@ class Workflow:
 				"results": [],
 				"tools": []
 			  },
-			  "pran_3": {
+			  "exan_3": {
 				"type": "activity",
 				"name": "Text strings",
 				"description": "",
@@ -93,7 +93,26 @@ class Workflow:
 				"tools": [
 				  "pestudio",
 				  "idapro",
-				  "bintext"
+				  "bintext",
+				  "winhex",
+				  "peview"
+				]
+			  },
+			  "exan_4": {
+				"type": "activity",
+				"name": "File Format",
+				"description": "",
+				"phase": "Preliminary analysis",
+				"color": "#EA8ABA",
+				"results": [],
+				"tools": [
+				  "pestudio",
+				  "idapro",
+				  "binwalk",
+				  "pebrowse",
+				  "dependencywalker",
+				  "lordpe",
+				  "peview"
 				]
 			  },
 			  "unpk_0": {
@@ -104,6 +123,7 @@ class Workflow:
 				"color":"#2CD551",
 				"results": [],
 				"tools": [
+				  "peview",
 				  "pestudio",
 				  "bintext",
 				  "pebrowse",
@@ -124,6 +144,21 @@ class Workflow:
 				"tools": []
 			  },
 			  "unpk_2": {
+				"type": "decision",
+				"name": "Packer identified?",
+				"description": "",
+				"phase": "Unpacking",
+				"color":"#2CD551",
+				"results": [],
+				"tools": [
+				  "pebrowse",
+				  "winhex",
+				  "peexplorer",
+				  "procdump32",
+				  "upx"
+				]
+			  },
+			  "unpk_3": {
 				"type": "activity",
 				"name": "Automatic decryption or unpacking",
 				"description": "",
@@ -138,16 +173,16 @@ class Workflow:
 				  "upx"
 				]
 			  },
-			  "unpk_3": {
+			  "unpk_4": {
 				"type": "decision",
-				"name": "Has it been decrypted or unpacked?",
+				"name": "Has it been automatically decrypted or unpacked?",
 				"description": "",
 				"phase": "Unpacking",
 				"color":"#2CD551",
 				"results": [],
 				"tools": []
 			  },
-			  "unpk_4": {
+			  "unpk_5": {
 				"type": "activity",
 				"name": "Manual decryption or unpacking",
 				"description": "",
@@ -155,45 +190,46 @@ class Workflow:
 				"color":"#2CD551",
 				"results": [],
 				"tools": [
-				  "idapro"
+				  "idapro",
+				  "ollydbg",
 				]
 			  },
-			  "unpk_5": {
+			  "unpk_6": {
 				"type": "decision",
-				"name": "Has it been decrypted or unpacked?",
+				"name": "Has it been manually decrypted or unpacked?",
 				"description": "",
 				"phase": "Unpacking",
 				"color":"#2CD551",
 				"results": [],
 				"tools": []
 			  },
-			  "imgc_0": {
-				"type": "activity",
-				"name": "Digital material",
-				"description": "",
-				"phase": "Image creation",
-				"color": "#05A8F4",
-				"results": [],
-				"tools": []
-			  },
-			  "imgc_1": {
-				"type": "activity",
-				"name": "Build a virtual machine",
-				"description": "",
-				"phase": "Image creation",
-				"color": "#05A8F4",
-				"results": [],
-				"tools": []
-			  },
-			  "imgc_2": {
-				"type": "activity",
-				"name": "Image animation",
-				"description": "",
-				"phase": "Image creation",
-				"color": "#05A8F4",
-				"results": [],
-				"tools": []
-			  },
+			#   "imgc_0": {
+			# 	"type": "activity",
+			# 	"name": "Digital material",
+			# 	"description": "",
+			# 	"phase": "Image creation",
+			# 	"color": "#05A8F4",
+			# 	"results": [],
+			# 	"tools": []
+			#   },
+			#   "imgc_1": {
+			# 	"type": "activity",
+			# 	"name": "Build a virtual machine",
+			# 	"description": "",
+			# 	"phase": "Image creation",
+			# 	"color": "#05A8F4",
+			# 	"results": [],
+			# 	"tools": []
+			#   },
+			#   "imgc_2": {
+			# 	"type": "activity",
+			# 	"name": "Image animation",
+			# 	"description": "",
+			# 	"phase": "Image creation",
+			# 	"color": "#05A8F4",
+			# 	"results": [],
+			# 	"tools": []
+			#   },
 			  "stic_0": {
 				"type": "activity",
 				"name": "Static code analysis",
@@ -202,38 +238,39 @@ class Workflow:
 				"color":"#FFC009",
 				"results": [],
 				"tools": [
+				  "pebrowse",
 				  "idapro",
 				  "ghidra",
 				  "loadlib"
 				]
 			  },
-			  "stic_1": {
-				"type": "decision",
-				"name": "Problem?",
-				"description": "",
-				"phase": "Static analysis",
-				"color":"#FFC009",
-				"results": [],
-				"tools": []
-			  },
-			  "stic_2": {
-				"type": "activity",
-				"name": "IDA Pro plugin",
-				"description": "",
-				"phase": "Static analysis",
-				"color":"#FFC009",
-				"results": [],
-				"tools": []
-			  },
-			  "stic_3": {
-				"type": "decision",
-				"name": "Need dynamic analysis?",
-				"description": "",
-				"phase": "Static analysis",
-				"color":"#FFC009",
-				"results": [],
-				"tools": []
-			  },
+			#   "stic_1": {
+			# 	"type": "decision",
+			# 	"name": "Problem?",
+			# 	"description": "",
+			# 	"phase": "Static analysis",
+			# 	"color":"#FFC009",
+			# 	"results": [],
+			# 	"tools": []
+			#   },
+			#   "stic_2": {
+			# 	"type": "activity",
+			# 	"name": "IDA Pro plugin",
+			# 	"description": "",
+			# 	"phase": "Static analysis",
+			# 	"color":"#FFC009",
+			# 	"results": [],
+			# 	"tools": []
+			#   },
+			#   "stic_3": {
+			# 	"type": "decision",
+			# 	"name": "Need dynamic analysis?",
+			# 	"description": "",
+			# 	"phase": "Static analysis",
+			# 	"color":"#FFC009",
+			# 	"results": [],
+			# 	"tools": []
+			#   },
 			  "dnmc_0": {
 				"type": "activity",
 				"name": "Dynamic code analysis",
@@ -247,27 +284,36 @@ class Workflow:
 				  "loadlib"
 				]
 			  },
-			  "dnmc_1": {
-				"type": "decision",
-				"name": "Problem?",
-				"description": "",
-				"phase": "Dynamic analysis",
-				"color": "#FF5252",
-				"results": [],
-				"tools": []
-			  },
-			  "dnmc_2": {
-				"type": "activity",
-				"name": "OllyDBG Plugin",
-				"description": "",
-				"phase": "Dynamic analysis",
-				"color": "#FF5252",
-				"results": [],
-				"tools": []
-			  },
+			#   "dnmc_1": {
+			# 	"type": "decision",
+			# 	"name": "Problem?",
+			# 	"description": "",
+			# 	"phase": "Dynamic analysis",
+			# 	"color": "#FF5252",
+			# 	"results": [],
+			# 	"tools": []
+			#   },
+			#   "dnmc_2": {
+			# 	"type": "activity",
+			# 	"name": "OllyDBG Plugin",
+			# 	"description": "",
+			# 	"phase": "Dynamic analysis",
+			# 	"color": "#FF5252",
+			# 	"results": [],
+			# 	"tools": []
+			#   },
 			  "dnmc_3": {
 				"type": "decision",
-				"name": "Need more static analysis?",
+				"name": "Need Static Analysis?",
+				"description": "",
+				"phase": "Dynamic analysis",
+				"color": "#FF5252",
+				"results": [],
+				"tools": []
+			  },
+			  "dnmc_4": {
+				"type": "decision",
+				"name": "Need More Dynamic Analysis?",
 				"description": "",
 				"phase": "Dynamic analysis",
 				"color": "#FF5252",
@@ -275,6 +321,21 @@ class Workflow:
 				"tools": []
 			  },
 			  "impt_0": {
+				"type": "activity",
+				"name": "Check Import Table",
+				"description": "",
+				"phase": "Import table reconstruction",
+				"color":"#9C27B0",
+				"results": [],
+				"tools": [
+					"pestudio",
+					"pebrowse",
+					"idapro",
+					"scylla",
+					"lordpe"
+				]
+			  },
+			  "impt_1": {
 				"type": "decision",
 				"name": "Import table corrupted",
 				"description": "",
@@ -283,7 +344,7 @@ class Workflow:
 				"results": [],
 				"tools": []
 			  },
-			  "impt_1": {
+			  "impt_2": {
 				"type": "activity",
 				"name": "Reconstruct import table",
 				"description": "",
@@ -409,194 +470,53 @@ class Workflow:
 				  "sniffhit",
 				  "mailpot"
 				]
+			  },
+			  "stop": {
+				  "type": "activity",
+				  "name": "End",
+				  "description": "",
+				  "phase": "",
+				  "color": "",
+				  "results": [],
+				  "tools": []
 			  }
 			},
 			"edges": [
 			  {
 				"source": "start",
-				"destination": "extr_0",
-				"value": ""
-			  },
-			  {
-				"source": "extr_0",
-				"destination": "extr_1",
-				"value": "Yes"
-			  },
-			  {
-				"source": "extr_0",
-				"destination": "extr_2",
-				"value": "No"
-			  },
-			  {
-				"source": "extr_1",
-				"destination": "extr_3",
-				"value": ""
-			  },
-			  {
-				"source": "extr_2",
-				"destination": "extr_3",
-				"value": ""
-			  },
-			  {
-				"source": "extr_3",
-				"destination": "pran_0",
-				"value": ""
-			  },
-			  {
-				"source": "pran_0",
-				"destination": "pran_1",
-				"value": ""
-			  },
-			  {
-				"source": "pran_1",
-				"destination": "pran_2",
-				"value": ""
-			  },
-			  {
-				"source": "pran_2",
-				"destination": "pran_3",
-				"value": ""
-			  },
-			  {
-				"source": "pran_3",
-				"destination": "unpk_0",
-				"value": ""
-			  },
-			  {
-				"source": "unpk_0",
-				"destination": "unpk_1",
-				"value": ""
-			  },
-			  {
-				"source": "unpk_1",
-				"destination": "unpk_2",
-				"value": "Yes"
-			  },
-			  {
-				"source": "unpk_1",
-				"destination": "imgc_0",
-				"value": "No"
-			  },
-			  {
-				"source": "unpk_2",
-				"destination": "unpk_3",
-				"value": ""
-			  },
-			  {
-				"source": "unpk_3",
-				"destination": "pran_3",
-				"value": "Yes"
-			  },
-			  {
-				"source": "unpk_3",
-				"destination": "unpk_4",
-				"value": "No"
-			  },
-			  {
-				"source": "unpk_4",
-				"destination": "unpk_5",
-				"value": ""
-			  },
-			  {
-				"source": "unpk_5",
-				"destination": "pran_3",
-				"value": "Yes"
-			  },
-			  {
-				"source": "unpk_5",
-				"destination": "imgc_0",
-				"value": "No"
-			  },
-			  {
-				"source": "imgc_0",
-				"destination": "imgc_1",
-				"value": ""
-			  },
-			  {
-				"source": "imgc_1",
-				"destination": "imgc_2",
-				"value": ""
-			  },
-			  {
-				"source": "imgc_2",
-				"destination": "stic_0",
-				"value": ""
-			  },
-			  {
-				"source": "stic_0",
-				"destination": "stic_1",
-				"value": ""
-			  },
-			  {
-				"source": "stic_1",
-				"destination": "stic_2",
-				"value": "Yes"
-			  },
-			  {
-				"source": "stic_1",
-				"destination": "stic_3",
-				"value": "No"
-			  },
-			  {
-				"source": "stic_2",
-				"destination": "stic_0",
-				"value": ""
-			  },
-			  {
-				"source": "stic_3",
-				"destination": "dnmc_0",
-				"value": "Yes"
-			  },
-			  {
-				"source": "stic_3",
-				"destination": "impt_0",
-				"value": "No"
-			  },
-			  {
-				"source": "dnmc_0",
-				"destination": "dnmc_1",
-				"value": ""
-			  },
-			  {
-				"source": "dnmc_1",
-				"destination": "dnmc_2",
-				"value": "Yes"
-			  },
-			  {
-				"source": "dnmc_1",
-				"destination": "dnmc_3",
-				"value": "No"
-			  },
-			  {
-				"source": "dnmc_2",
-				"destination": "dnmc_0",
-				"value": ""
-			  },
-			  {
-				"source": "dnmc_3",
-				"destination": "stic_0",
-				"value": "Yes"
-			  },
-			  {
-				"source": "dnmc_3",
-				"destination": "impt_0",
-				"value": "No"
-			  },
-			  {
-				"source": "impt_0",
-				"destination": "impt_1",
-				"value": "Yes"
-			  },
-			  {
-				"source": "impt_0",
 				"destination": "bhvr_0",
-				"value": "Yes"
-			  },
-			  {
-				"source": "impt_1",
-				"destination": "unpk_1",
 				"value": ""
 			  },
+			#   {
+			# 	"source": "start",
+			# 	"destination": "extr_0",
+			# 	"value": ""
+			#   },
+			#   {
+			# 	"source": "extr_0",
+			# 	"destination": "extr_1",
+			# 	"value": "Yes"
+			#   },
+			#   {
+			# 	"source": "extr_0",
+			# 	"destination": "extr_2",
+			# 	"value": "No"
+			#   },
+			#   {
+			# 	"source": "extr_1",
+			# 	"destination": "extr_3",
+			# 	"value": ""
+			#   },
+			#   {
+			# 	"source": "extr_2",
+			# 	"destination": "extr_3",
+			# 	"value": ""
+			#   },
+			#   {
+			# 	"source": "extr_3",
+			# 	"destination": "exan_0",
+			# 	"value": ""
+			#   },
 			  {
 				"source": "bhvr_0",
 				"destination": "bhvr_1",
@@ -621,7 +541,217 @@ class Workflow:
 				"source": "bhvr_4",
 				"destination": "bhvr_5",
 				"value": ""
-			  }
+			  },
+			  {
+				"source": "bhvr_5",
+				"destination": "exan_0",
+				"value": ""
+			  },
+			  {
+				"source": "exan_0",
+				"destination": "exan_1",
+				"value": ""
+			  },
+			  {
+				"source": "exan_1",
+				"destination": "exan_2",
+				"value": ""
+			  },
+			  {
+				"source": "exan_2",
+				"destination": "exan_3",
+				"value": ""
+			  },
+			  {
+				"source": "exan_3",
+				"destination": "exan_4",
+				"value": ""
+			  },
+			  {
+				"source": "exan_4",
+				"destination": "unpk_0",
+				"value": ""
+			  },
+			  {
+				"source": "unpk_0",
+				"destination": "unpk_1",
+				"value": ""
+			  },
+			  {
+				"source": "unpk_1",
+				"destination": "unpk_2",
+				"value": "Yes"
+			  },
+			  {
+				"source": "unpk_1",
+				"destination": "stic_0",
+				"value": "No"
+			  },
+			#   {
+			# 	"source": "unpk_1",
+			# 	"destination": "imgc_0",
+			# 	"value": "No"
+			#   },
+			  {
+				"source": "unpk_2",
+				"destination": "unpk_3",
+				"value": "Yes"
+			  },
+              {
+				"source": "unpk_2",
+				"destination": "unpk_5",
+				"value": "No"
+			  },
+			  {
+				"source": "unpk_3",
+				"destination": "unpk_4",
+				"value": ""
+			  },
+			  {
+				"source": "unpk_4",
+				"destination": "exan_3",
+				"value": "Yes"
+			  },
+			  {
+				"source": "unpk_4",
+				"destination": "unpk_5",
+				"value": "No"
+			  },
+			  {
+				"source": "unpk_5",
+				"destination": "unpk_6",
+				"value": ""
+			  },
+			  {
+				"source": "unpk_6",
+				"destination": "impt_0",
+				"value": "Yes"
+			  },
+			  {
+				"source": "unpk_6",
+				"destination": "dnmc_0",
+				"value": "No"
+			  },
+			#   {
+			# 	"source": "unpk_5",
+			# 	"destination": "imgc_0",
+			# 	"value": "No"
+			#   },
+			#   {
+			# 	"source": "imgc_0",
+			# 	"destination": "imgc_1",
+			# 	"value": ""
+			#   },
+			#   {
+			# 	"source": "imgc_1",
+			# 	"destination": "imgc_2",
+			# 	"value": ""
+			#   },
+			#   {
+			# 	"source": "imgc_2",
+			# 	"destination": "stic_0",
+			# 	"value": ""
+			#   },
+			  {
+				"source": "impt_0",
+				"destination": "impt_1",
+				"value": ""
+			  },
+			  {
+				"source": "impt_1",
+				"destination": "impt_2",
+				"value": "Yes"
+			  },
+			  {
+				"source": "impt_1",
+				"destination": "stic_0",
+				"value": "No"
+			  },
+			  {
+				"source": "impt_2",
+				"destination": "exan_3",
+				"value": ""
+			  },
+			  {
+				"source": "stic_0",
+				"destination": "dnmc_0",
+				"value": ""
+			  },
+			#   {
+			# 	"source": "stic_0",
+			# 	"destination": "stic_1",
+			# 	"value": ""
+			#   },
+			#   {
+			# 	"source": "stic_1",
+			# 	"destination": "stic_2",
+			# 	"value": "Yes"
+			#   },
+			#   {
+			# 	"source": "stic_1",
+			# 	"destination": "stic_3",
+			# 	"value": "No"
+			#   },
+			#   {
+			# 	"source": "stic_2",
+			# 	"destination": "stic_0",
+			# 	"value": ""
+			#   },
+			#   {
+			# 	"source": "stic_3",
+			# 	"destination": "dnmc_0",
+			# 	"value": "Yes"
+			#   },
+			#   {
+			# 	"source": "stic_3",
+			# 	"destination": "stop",
+			# 	"value": "No"
+			#   },
+			  {
+				"source": "dnmc_0",
+				"destination": "dnmc_3",
+				"value": ""
+			  },
+			#   {
+			# 	"source": "dnmc_0",
+			# 	"destination": "dnmc_1",
+			# 	"value": ""
+			#   },
+			#   {
+			# 	"source": "dnmc_1",
+			# 	"destination": "dnmc_2",
+			# 	"value": "Yes"
+			#   },
+			#   {
+			# 	"source": "dnmc_1",
+			# 	"destination": "dnmc_3",
+			# 	"value": "No"
+			#   },
+			#   {
+			# 	"source": "dnmc_2",
+			# 	"destination": "dnmc_0",
+			# 	"value": ""
+			#   },
+			  {
+				"source": "dnmc_3",
+				"destination": "stic_0",
+				"value": "Yes"
+			  },
+			  {
+				"source": "dnmc_3",
+				"destination": "dnmc_4",
+				"value": "No"
+			  },
+			  {
+				"source": "dnmc_4",
+				"destination": "dnmc_0",
+				"value": "Yes"
+			  },
+			  {
+				"source": "dnmc_4",
+				"destination": "stop",
+				"value": "No"
+			  },
 			]
 		  },
 			"tools": {
@@ -642,7 +772,7 @@ class Workflow:
 					"nature": "GUI"
 				},
 				"pebrowse": {
-					"regex": r"(?i)^pebrowse(?:\.exe)?",
+					"regex": r"(?i)^pebrowse(?:.*)(?:\.exe)?",
 					"nature": "GUI"
 				},
 				"fileinsight": {
@@ -772,51 +902,64 @@ class Workflow:
 				"apatedns": {
 					"regex": r"(?i)^apatedns(?:\.exe)?",
 					"nature": "GUI"
+				},
+				"dependencywalker": {
+					"regex": r"(?i)^dependency(?:\s*)walker(?:\.exe)?",
+					"nature": "GUI"
+				},
+				"lordpe": {
+					"regex": r"(?i)^lordpe(?:\.exe)?",
+					"nature": "GUI"
+				},
+				"peview": {
+					"regex": r"(?i)^peview(?:\.exe)?",
+					"nature": "GUI"
 				}
 			}
 
 		}
-		self._check_structure()
+		Workflow.check_structure(self.__dict__)
 
 		if malware_executable:
 			self.__dict__['workflow']['nodes']['bhvr_1']['tools'].append(malware_executable)
 			self.__dict__['tools'][malware_executable] = {}
 			self.__dict__['tools'][malware_executable]['regex'] = malware_executable
 	
-	def _check_structure(self):
+	@staticmethod
+	def check_structure(workflow:dict):
 		
-		if 'workflow' not in self.__dict__:
+		if 'workflow' not in workflow:
 			raise ValueError("workflow must contain 2 main keys 'workflow' and 'tools'")
 		
-		if 'nodes' not in self.__dict__['workflow'] or 'edges' not in self.__dict__['workflow']:
+		if 'nodes' not in workflow['workflow'] or 'edges' not in workflow['workflow']:
 			raise ValueError("'workflow' key must contain the sub keys 'nodes' and 'edges'")
 
-		if not isinstance(self.__dict__['workflow']['nodes'], dict):
+		if not isinstance(workflow['workflow']['nodes'], dict):
 			raise ValueError("'nodes' must have a dictionary as value")
 		
-		if not isinstance(self.__dict__['workflow']['edges'], list):
+		if not isinstance(workflow['workflow']['edges'], list):
 			raise ValueError("'edges' must have a list as value")
 
-		if not all(['type' in node for _,node in self.__dict__['workflow']['nodes'].items()]):
+		if not all(['type' in node for _,node in workflow['workflow']['nodes'].items()]):
 			raise ValueError("'type' key is missing in one or more nodes")
 		
-		if not all(['name' in node for _,node in self.__dict__['workflow']['nodes'].items()]):
+		if not all(['name' in node for _,node in workflow['workflow']['nodes'].items()]):
 			raise ValueError("'name' key is missing in one or more nodes")
 
-		if not all(['phase' in node for _,node in self.__dict__['workflow']['nodes'].items()]):
+		if not all(['phase' in node for _,node in workflow['workflow']['nodes'].items()]):
 			raise ValueError("'phase' key is missing in one or more nodes")
 
-		if not all(['tools' in node for _,node in self.__dict__['workflow']['nodes'].items()]):
+		if not all(['tools' in node for _,node in workflow['workflow']['nodes'].items()]):
 			raise ValueError("'tools' key is missing in one or more nodes")
 		
 
-		if not all(['source' in edge for edge in self.__dict__['workflow']['edges']]):
+		if not all(['source' in edge for edge in workflow['workflow']['edges']]):
 			raise ValueError("'source' key is missing in one or more edges")
 
-		if not all(['destination' in edge for edge in self.__dict__['workflow']['edges']]):
+		if not all(['destination' in edge for edge in workflow['workflow']['edges']]):
 			raise ValueError("'destination' key is missing in one or more edges")
 
-		if not all(['value' in edge for edge in self.__dict__['workflow']['edges']]):
+		if not all(['value' in edge for edge in workflow['workflow']['edges']]):
 			raise ValueError("'value' key is missing in one or more edges")
 		
 	def __getitem__(self, key):
@@ -846,4 +989,13 @@ class Workflow:
 
 	def get_nodes_ids(self):
 		return self.__dict__['workflow']['nodes'].keys()
+
+	@staticmethod
+	def from_dict(obj):
+		Workflow.check_structure(obj)
+
+		workflow = Workflow()
+		workflow.__dict__ = obj
+
+		return workflow
 	  

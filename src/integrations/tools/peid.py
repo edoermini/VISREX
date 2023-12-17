@@ -1,4 +1,4 @@
-from masup.tools.generics import DesktopTool
+from integrations.generics import DesktopTool
 
 class Tool(DesktopTool):
     def __init__(self, path: str):

@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QDialog, QPushButton, QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit, QMessageBox
 
-from masup.modules.processes import Process
+from integrations.modules.processes import Process
 from .hex_viewer_dialog import HexViewer
 import pymem.exception
 

@@ -1,4 +1,4 @@
-from masup.tools.generics import DesktopTool
+from integrations.generics import DesktopTool
 import tempfile
 import re
 from pathlib import Path

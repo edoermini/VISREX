@@ -3,7 +3,6 @@ from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt, pyqtSignal
 import qtawesome as qta
 import markdown
-from gui.utils import isDarkThemeActive
 
 class MardownEdit(QWidget):
     textUpdated = pyqtSignal(str)
@@ -54,7 +53,7 @@ class MardownEdit(QWidget):
         self.markdown_view.setHtml(html)
     
     def setText(self, text:str):
-        self.markdown_edit.setText = text
+        self.markdown_edit.setText(text)
     
     def setDarkMode(self, dark_mode):
         self.dark_mode = dark_mode

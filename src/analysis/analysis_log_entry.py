@@ -7,16 +7,20 @@ class AnalysisLogEntry:
         self.activity = activity
         self.executable = executable
         self.arguments = arguments
-        self.time = int(time())
+        self.log_time = int(time())
 
         if log_time:
-            self.time = log_time
+            self.log_time = log_time
 
         self.notes : str = notes
+    
+    @staticmethod
+    def get_keys():
+        return ['log_time', 'tool', 'activity', 'executable', 'arguments', 'notes']
 
     def to_json(self, string_values:bool = False):
         return {
-            'time':datetime.fromtimestamp(self.time).isoformat() if string_values else self.time,
+            'log_time':datetime.fromtimestamp(self.log_time).isoformat() if string_values else self.log_time,
             'tool':self.tool,
             'activity':self.activity,
             'executable':self.executable,
@@ -26,7 +30,7 @@ class AnalysisLogEntry:
 
     def to_list(self, string_values:bool = False):
         return [
-            datetime.fromtimestamp(self.time).isoformat() if string_values else self.time,
+            datetime.fromtimestamp(self.log_time).isoformat() if string_values else self.log_time,
             self.tool,
             self.activity,
             self.executable,
@@ -41,5 +45,5 @@ class AnalysisLogEntry:
             self.executable,
             self.arguments,
             self.notes,
-            self.time
+            self.log_time
         )

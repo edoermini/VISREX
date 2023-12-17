@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 import subprocess
 import platform
-import pyperclip
 
 if platform.system() == 'Windows':
     from RPA.Windows import Windows as Library
@@ -15,7 +14,6 @@ class DesktopTool(ABC):
         self.window_locator = r''
         self.load_file_locator = r''
         self.open_file_pop_up_window_locator = r''
-        self.clipboard = ""
 
         self.path = path
         self.library = Library()
@@ -23,9 +21,6 @@ class DesktopTool(ABC):
     @abstractmethod
     def execute(self, *args, **kwargs):
         pass
-    
-    def update_clipboard(self):
-        self.clipboard = ""
 
     def attach(self):
         self._control_window()
@@ -48,11 +43,8 @@ class DesktopTool(ABC):
         self.library.set_anchor(self.open_file_pop_up_window_locator)
         self.library.send_keys(self.open_file_pop_up_window_locator,sample_path+'{ENTER}')
     
-    def click(self, locator):
+    def click(self, locator:str):
         self.library.click(locator)
-    
-    def copy_to_clipboard(self):
-        pyperclip.copy(self.clipboard)
 
     def close(self):
         """Closes the application"""

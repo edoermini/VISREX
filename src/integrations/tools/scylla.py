@@ -1,4 +1,4 @@
-from masup.tools.generics import DesktopTool
+from integrations.generics import DesktopTool
 import tempfile
 import os
 
@@ -10,7 +10,14 @@ class Tool(DesktopTool):
         self.load_file_locator = r'name:...'
         self.open_file_pop_up_window_locator = r'name:"Open file..."'
 
-    def attach_to_process(self, executable_name):
+    def execute(self, *args, **kwargs):
+        self.run()
+        self.attach_to_process(kwargs['malware'])
+        self.set_oep(kwargs['oep'])
+        self.iat_autosearch()
+        self.get_imports()
+
+    def attach_to_process(self, executable_name:str):
         self.library.click(r'name:"Attach to an active process" type:ComboBox')
         self.library.click(f'regex:".*{executable_name}.*" type:ListItem')
         

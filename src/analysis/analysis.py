@@ -2,27 +2,37 @@ import psutil
 import re
 from time import time
 from typing import Any
-import pickle
+import json
 from threading import Lock
 from datetime import datetime
 from time import time
 from collections import OrderedDict
 import copy
+import os
+import pathlib
 
 from .workflow import Workflow
 from .analysis_log_entry import AnalysisLogEntry
 
 class Analysis:
 	def __init__(self, malware_sample):
-		self.malware_sample = malware_sample
+		self.malware_sample = str(pathlib.Path(malware_sample))
 
-		self.workflow = Workflow(malware_sample)
+		self.workflow = Workflow(os.path.basename(malware_sample))
+
+		# a structure logging the activities at level of workflow actions
 		self.activities : dict[str, Any] = {}
+
+		# stores the current active tools, used to determine closed and opened tools
 		self.active_tools : set[str] = set([])
 		
+		# the entire activity log at level of tools
 		self.activity_log : list[AnalysisLogEntry] = []
+
+		# stores all the executables found for a tool
 		self.executables : dict[str, list[str]] = {}
 		
+		# stores for each running tool the executable and the arguments
 		self.running_tools_info : dict[str, OrderedDict[str, Any]] = {}
 
 		# locks both self.activity_log and self.executables resources
@@ -127,8 +137,32 @@ class Analysis:
 		self._update_activities(current_time)
 
 	def export_analysis(self, file_path:str):
-		with open(file_path, "wb") as file:
-			pickle.dump(self, file)
+		
+		json_analysis = {
+			'malware_sample': self.malware_sample,
+			'workflow': self.workflow.__dict__,
+			'activities': self.activities,
+			'activity_log': [log.__dict__ for log in self.activity_log]
+		}
+
+		with open(file_path, "w") as file:
+			json.dump(json_analysis, file)
+	
+	@staticmethod
+	def import_analysis(file_path:str):
+
+		json_analysis = {}
+
+		with open(file_path, "r") as file:
+			json_analysis = json.load(file)
+
+		analysis = Analysis(json_analysis['malware_sample'])
+		analysis.workflow = Workflow.from_dict(json_analysis['workflow'])
+		analysis.activities = json_analysis['activities']
+
+		analysis.activity_log = [AnalysisLogEntry(**log_entry) for log_entry in json_analysis['activity_log']]
+
+		return analysis
 
 	def update_activity_log(self, data:list[AnalysisLogEntry] | AnalysisLogEntry):
 		with self.activity_log_lock:
@@ -168,6 +202,10 @@ class Analysis:
 
 		with self.activity_log_lock:
 			return copy.copy(self.activity_log[index])
+	
+	def get_activity_log_len(self):
+		with self.activity_log_lock:
+			return len(self.activity_log)
 
 	def get_installed_tools(self, node_id:str):
 		executables = self.get_executables()
@@ -186,4 +224,8 @@ class Analysis:
 	def update_log_entry_notes(self, index:int, notes:str):
 		with self.activity_log_lock:
 			self.activity_log[index].notes = notes
+	
+	def change_malware_sample(self, malware_sample:str):
+		self.malware_sample = str(pathlib.Path(malware_sample))
+		self.workflow = Workflow(os.path.basename(malware_sample))
 			

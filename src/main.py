@@ -30,7 +30,7 @@ if __name__ == '__main__':
                     malware_sample = new_analysis_dialog.file_name
             
             else:
-                open_analysis_dialog = ChoseFileDialog("Chose analysis", "Malware Analysis Supporter Files (*.masup)")
+                open_analysis_dialog = ChoseFileDialog("Chose analysis", "JSON Files (*.json)")
                 open_analysis_dialog.setWindowIcon(QIcon('gui/assets/app_icon.png'))
                 result = open_analysis_dialog.exec_()
 

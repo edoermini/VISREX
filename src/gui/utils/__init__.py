@@ -1,1 +1,1 @@
-from .dark_theme import isDarkThemeActive
+from .colors import *
