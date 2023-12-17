@@ -165,7 +165,7 @@ class MainWindow(QMainWindow):
 		self.read_process_memory_button.setCheckable(False)
 		self.toolbar.addAction(self.read_process_memory_button)
 
-		self.iat_reconstruction_button = QAction(qta.icon("fa5s.tools", color="white" if is_dark_theme_active(self) else "black"), "Reconstruct IAT", self)
+		self.iat_reconstruction_button = QAction(qta.icon("fa5s.wrench", color="white" if is_dark_theme_active(self) else "black"), "Reconstruct IAT", self)
 		self.iat_reconstruction_button.triggered.connect(self.iatReconstruct)
 		self.iat_reconstruction_button.setCheckable(False)
 		self.toolbar.addAction(self.iat_reconstruction_button)
@@ -440,7 +440,7 @@ class MainWindow(QMainWindow):
 
 		self.flowchart.setEdgesColor(QColor(Qt.white) if dark_mode else QColor(Qt.black))
 		self.progress_page_button.setIcon(qta.icon("fa5s.project-diagram", color="white" if dark_mode else "black"))
-		self.iat_reconstruction_button.setIcon(qta.icon("fa5s.tools", color="white" if dark_mode else "black"))
+		self.iat_reconstruction_button.setIcon(qta.icon("fa5s.wrench", color="white" if dark_mode else "black"))
 		self.activity_log_page_button.setIcon(qta.icon("fa5s.history", color="white" if dark_mode else "black"))
 		self.read_process_memory_button.setIcon(qta.icon("fa5s.syringe", color="white" if dark_mode else "black"))
 		self.play_action.setIcon(qta.icon("fa5s.play", color="white" if dark_mode else "black"))
