@@ -1,0 +1,3 @@
+SET_MALWARE_SAMPLE_ACTIVITY = "Set malware sample"
+READ_PROCESS_MEMORY_ACTIVITY = "Read process memory"
+UNPACKING_ACTIVITY = "Unpack"

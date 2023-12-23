@@ -5,4 +5,6 @@ QtAwesome==1.2.3
 rpaframework==27.4.1
 Pymem==1.13.0
 Markdown==3.5.1
-jsonpickle==3.0.2
+PyAutoGUI==0.9.54
+pyperclip==1.8.2
+PyGetWindow==0.0.9

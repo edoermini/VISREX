@@ -1,4 +1,6 @@
 from PyQt6.QtWidgets import QComboBox, QDialog, QPushButton, QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit
+import concurrent.futures
+from gui.updaters import DialogFormUpdater
 
 class IATReconstructionDialog(QDialog):
     def __init__(self, tools:list, parent=None):
@@ -38,11 +40,21 @@ class IATReconstructionDialog(QDialog):
         mainLayout = QVBoxLayout(self)
         mainLayout.addLayout(formLayout)
         mainLayout.addLayout(buttonLayout)
+
+        self.oep_auto_fill_thread = DialogFormUpdater()
+        self.oep_auto_fill_thread.update_signal.connect(self.auto_fill)
+        self.oep_auto_fill_thread.start()
     
     def go(self):
+        self.oep_auto_fill_thread.stop()
+        self.oep_auto_fill_thread.wait()
+        
         self.accept()
     
     def closeEvent(self, event) -> None:
+        self.oep_auto_fill_thread.stop()
+        self.oep_auto_fill_thread.wait()
+
         self.accept()
         self.setResult(QDialog.Rejected)
     
@@ -51,3 +63,9 @@ class IATReconstructionDialog(QDialog):
 
     def getTool(self):
         return self.combo_box.currentText()
+
+    def auto_fill(self, oep):
+        print(oep)
+        self.oep.setText(oep)
+
+            

@@ -40,8 +40,9 @@ class DesktopTool(ABC):
     
     def load_sample_from_gui(self, sample_path):
         self.library.click(self.load_file_locator)
-        self.library.set_anchor(self.open_file_pop_up_window_locator)
+        #self.library.set_anchor(self.open_file_pop_up_window_locator)
         self.library.send_keys(self.open_file_pop_up_window_locator,sample_path+'{ENTER}')
+        #self.library.
     
     def click(self, locator:str):
         self.library.click(locator)
@@ -56,19 +57,12 @@ class CLITool(ABC):
     @abstractmethod
     def __init__(self, path:str):
         self.path = path
-        self.process = None
-        self.stdout = str()
-        self.stderr = str()
 
     def _run(self, args):
-        self.process = subprocess.Popen([self.path] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = self.process.communicate()
+        process = subprocess.Popen([self.path] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
 
-        self.stdout = stdout.decode('utf-8')
-        self.stderr = stderr.decode('utf-8')
-    
-    def execute(self, *args, **kwargs):
-        self._run(kwargs['arguments'])
+        return stdout.decode('utf-8'), stderr.decode('utf-8'), process.returncode
     
     def get_output(self) -> str:
         return self.stdout

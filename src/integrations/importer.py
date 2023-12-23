@@ -2,7 +2,7 @@ import importlib
 
 def get_tool(toolname):
     try:
-        module = importlib.import_module(f'masup.tools.{toolname}')
+        module = importlib.import_module(f'integrations.tools.{toolname}')
     except ModuleNotFoundError:
         return None
     

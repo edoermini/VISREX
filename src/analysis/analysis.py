@@ -101,7 +101,7 @@ class Analysis:
 			log_entries.append(AnalysisLogEntry(
 				tool,
 				activity,
-				running_tool_info['executable'],
+				os.path.basename(running_tool_info['executable']),
 				running_tool_info['arguments'],
 				"",
 				current_time,
@@ -219,7 +219,10 @@ class Analysis:
 	
 	def get_executable(self, tool:str):
 		with self.executables_lock:
-			return self.executables[tool].copy()
+			if tool in self.executables:
+				return self.executables[tool].copy()
+		
+		return []
 	
 	def update_log_entry_notes(self, index:int, notes:str):
 		with self.activity_log_lock:
@@ -228,4 +231,12 @@ class Analysis:
 	def change_malware_sample(self, malware_sample:str):
 		self.malware_sample = str(pathlib.Path(malware_sample))
 		self.workflow = Workflow(os.path.basename(malware_sample))
+	
+	def update_log_entry(self, index:int, log_etry:AnalysisLogEntry):
+		with self.activity_log_lock:
+			self.activity_log[index] = log_etry
+	
+	def delete_log_entry(self, index:int):
+		with self.activity_log_lock:
+			self.activity_log.pop(index)
 			

@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QMenu, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QTableWidgetItem, QFileDialog, QDialog, QLabel, QSplitter, QTableWidget, QMessageBox
 from PyQt6.QtCore import Qt, QSize, QTimer, QThread
+from PyQt6 import QtCore
 from PyQt6.QtGui import QMovie, QAction, QActionGroup, QColor
 import qtawesome as qta
 import qdarktheme
@@ -9,10 +10,10 @@ from time import time
 from functools import partial
 import subprocess
 import platform
-from pathlib import Path
+import pathlib
 
 from gui.updaters import ActivityUpdater, ExecutablesUpdater
-from gui.dialogs import ReadProcessMemoryDialog, ComboBoxDialog, ToolsCoverageDialog, IATReconstructionDialog, TextBoxDialog
+from gui.dialogs import ReadProcessMemoryDialog, ComboBoxDialog, ToolsCoverageDialog, IATReconstructionDialog, PackerDetectionResultDialog, ChangePathsDialog
 from gui.flowcharts import GraphvizFlowchart
 from gui.tables import ResponsiveTableWidget
 from gui.shared import StatusMessagesQueue
@@ -23,8 +24,10 @@ from analysis import Analysis, AnalysisLogEntry
 from integrations.importer import get_tool
 from integrations.generics import DesktopTool
 
+from constants import SET_MALWARE_SAMPLE_ACTIVITY, UNPACKING_ACTIVITY, READ_PROCESS_MEMORY_ACTIVITY
+
 class MainWindow(QMainWindow):
-	def __init__(self, malware_sample=None, analysis_file=None):
+	def __init__(self, malware_sample=None, analysis=None, analysis_file:str=""):
 		super(MainWindow, self).__init__()
 
 		self.analysis_file = analysis_file
@@ -39,7 +42,7 @@ class MainWindow(QMainWindow):
 			self.analysis.update_activity_log(
 				AnalysisLogEntry(
 					"",
-					"Set malware sample",
+					SET_MALWARE_SAMPLE_ACTIVITY,
 					"",
 					[self.analysis.malware_sample,],
 					"",
@@ -48,7 +51,7 @@ class MainWindow(QMainWindow):
 			)
 		
 		else:
-			self.analysis = Analysis.import_analysis(self.analysis_file)
+			self.analysis = analysis
 		
 		self.initUI()
 		self.setTheme('auto')
@@ -105,6 +108,7 @@ class MainWindow(QMainWindow):
 		self.activity_log_table.setSelectionMode(QTableWidget.SingleSelection)
 		self.activity_log_table.cellClicked.connect(self.cell_selected)
 		self.activity_log_table.currentCellChanged.connect(self.cell_selected)
+		self.activity_log_table.deletedRow.connect(self.deleted_activity_log_entry)
 		
 		self.activity_log_page_splitter.addWidget(self.activity_log_table)
 
@@ -169,6 +173,11 @@ class MainWindow(QMainWindow):
 		self.iat_reconstruction_button.triggered.connect(self.iatReconstruct)
 		self.iat_reconstruction_button.setCheckable(False)
 		self.toolbar.addAction(self.iat_reconstruction_button)
+
+		self.unpacking_button = QAction(qta.icon("fa5s.box-open", color="white" if is_dark_theme_active(self) else "black"), "Unpack", self)
+		self.unpacking_button.triggered.connect(lambda: self.unpack(update_log=True))
+		self.unpacking_button.setCheckable(False)
+		self.toolbar.addAction(self.unpacking_button)
 
 		# top menu
 
@@ -272,6 +281,22 @@ class MainWindow(QMainWindow):
 		
 		self.executablesFinderStart()
 	
+	def update_malware_paths(self, analysis:Analysis):
+		paths = [entry.arguments[0] for entry in analysis.get_activity_log() if entry.activity == SET_MALWARE_SAMPLE_ACTIVITY]
+		change_path_dialog = ChangePathsDialog(paths, is_dark_theme_active(self))
+		result = change_path_dialog.exec_()
+
+		path_index = 0
+		new_paths = change_path_dialog.getPaths()
+
+		for index, entry in enumerate(analysis.get_activity_log()):
+			if entry.activity == SET_MALWARE_SAMPLE_ACTIVITY:
+				entry.arguments = [str(pathlib.Path(new_paths[path_index]))]
+				self.analysis.update_log_entry(index, entry)
+				path_index += 1
+		
+		return result == QDialog.Accepted
+	
 	def exportSVG(self):
 		file_path, _ = QFileDialog.getSaveFileName(self, "Save as SVG", "", "SVG Files (*.svg)")
 		if file_path:
@@ -369,9 +394,13 @@ class MainWindow(QMainWindow):
 	def openFile(self):
 		file_path, _ = QFileDialog.getOpenFileName(self, "Load Object", "", "JSON Files (*.json)")
 		if file_path:
-			self.analysis_file = file_path
-			self.analysis = Analysis.import_analysis(self.analysis_file)
-			self.flowchart.redraw(self.analysis.workflow.dot_code())
+			analysis = Analysis.import_analysis(file_path)
+			success = self.update_malware_paths(analysis)
+			
+			if success:
+				self.analysis_file = file_path
+				self.analysis = analysis
+				self.flowchart.redraw(self.analysis.workflow.dot_code())
 	
 	def readProcessMemory(self):
 		read_process_memory = ReadProcessMemoryDialog(self)
@@ -382,7 +411,7 @@ class MainWindow(QMainWindow):
 			self.analysis.update_activity_log(
 				AnalysisLogEntry(
 					"",
-					"Read process memory",
+					READ_PROCESS_MEMORY_ACTIVITY,
 					"",
 					[f"{read_process_memory.getProcessName()}, {read_process_memory.getStartAddress()}, {read_process_memory.getBytesLength()}"],
 					"",
@@ -421,6 +450,84 @@ class MainWindow(QMainWindow):
 						tool = tool_module.Tool(executable_dialog.getSelected())
 						tool.execute(malware=os.path.basename(self.analysis.malware_sample), oep=oep)
 
+	def unpack(self, update_log=False):
+		tools = self.analysis.get_installed_tools('unpk_0')
+		
+		chose_tool_dialog = ComboBoxDialog("Chose Packing Detection Tool",tools)
+		chose_tool_dialog.setMinimumWidth(300)
+		chose_tool_dialog_result = QDialog.Accepted
+		executable_dialog_result = QDialog.Rejected
+
+		tool = None
+
+		while chose_tool_dialog_result == QDialog.Accepted and executable_dialog_result == QDialog.Rejected:
+			chose_tool_dialog_result = chose_tool_dialog.exec_()
+		
+			if chose_tool_dialog_result == QDialog.Accepted:
+					tool_name = chose_tool_dialog.getSelected()
+
+					executable_dialog = ComboBoxDialog('Chose executable', self.analysis.get_executable(tool_name))
+					executable_dialog_result = executable_dialog.exec_()
+
+					if executable_dialog_result == QDialog.Accepted:
+						tool_module = get_tool(tool_name)
+
+						if tool_module is None:
+							error_dialog = QMessageBox(self)
+							error_dialog.setIcon(QMessageBox.Warning)
+							error_dialog.setWindowTitle("Error")
+							error_dialog.setText(f"Automations for tool {tool_name} are not available yet\nChose another tool")
+							error_dialog.exec_()
+
+							executable_dialog_result = QDialog.Rejected
+						else:
+							tool = tool_module.Tool(executable_dialog.getSelected())
+		
+		if not (chose_tool_dialog_result == QDialog.Accepted and executable_dialog_result == QDialog.Accepted):
+			return
+		
+		packer = tool.execute(malware=self.analysis.malware_sample)
+		tool.close()
+
+		if 'UPX' in packer:
+			packer_detection_result_dialog = PackerDetectionResultDialog(True, packer)
+			result = packer_detection_result_dialog.exec_()
+
+			if result == QDialog.Accepted:
+				executable_dialog = ComboBoxDialog('Chose executable', self.analysis.get_executable('upx'))
+				executable_dialog_result = executable_dialog.exec_()
+				
+				if executable_dialog_result == QDialog.Accepted:
+					tool_module = get_tool('upx')
+					tool = tool_module.Tool(executable_dialog.getSelected())
+					unpacked_name = os.path.join(os.path.dirname(self.analysis.malware_sample), f"unpacked_{os.path.basename(self.analysis.malware_sample)}")
+					unpacked = tool.execute(malware=self.analysis.malware_sample, output=unpacked_name)
+					
+					unpacked_dialog = QMessageBox(self)
+					
+					if unpacked:
+						unpacked_dialog.setIcon(QMessageBox.Information)
+						unpacked_dialog.setWindowTitle("Success")
+						unpacked_dialog.setText(f"Sample unpacked successfully to {unpacked_name}")
+
+						if update_log:
+							self.analysis.update_activity_log(
+								AnalysisLogEntry(
+									"upx",
+									UNPACKING_ACTIVITY,
+									"",
+									[],
+									"",
+									time()
+								)
+							)
+					else:
+						unpacked_dialog.setIcon(QMessageBox.Critical)
+						unpacked_dialog.setWindowTitle("Failure")
+						unpacked_dialog.setText(f"Unpacking Failed")
+
+					unpacked_dialog.exec_()
+
 	def closeEvent(self, event):
 		self.activity_updater.stop()
 		event.accept()
@@ -443,6 +550,7 @@ class MainWindow(QMainWindow):
 		self.iat_reconstruction_button.setIcon(qta.icon("fa5s.wrench", color="white" if dark_mode else "black"))
 		self.activity_log_page_button.setIcon(qta.icon("fa5s.history", color="white" if dark_mode else "black"))
 		self.read_process_memory_button.setIcon(qta.icon("fa5s.syringe", color="white" if dark_mode else "black"))
+		self.unpacking_button.setIcon(qta.icon("fa5s.box-open", color="white" if is_dark_theme_active(self) else "black"))
 		self.play_action.setIcon(qta.icon("fa5s.play", color="white" if dark_mode else "black"))
 		self.stop_action.setIcon(qta.icon("fa5s.stop", color="white" if dark_mode else "black"))
 		self.step_forward_action.setIcon(qta.icon("fa5s.step-forward", color="white" if dark_mode else "black"))
@@ -536,6 +644,9 @@ class MainWindow(QMainWindow):
 	def updateLogEntryNotes(self, note):
 		log_row = self.notes_stacked_widget.currentIndex()
 		self.analysis.update_log_entry_notes(log_row, note)
+
+		item = QTableWidgetItem(note)
+		self.activity_log_table.setItem(log_row, 5, item)
 	
 	def play_clicked(self):
 		
@@ -569,31 +680,43 @@ class MainWindow(QMainWindow):
 		log_entry = self.analysis.get_activity_log_entry(self.replay_index)
 
 		if log_entry.tool != '':
-			tool_module = get_tool(log_entry.tool)
-
-			if not tool_module:
-				error_dialog = QMessageBox(self)
-				error_dialog.setIcon(QMessageBox.Warning)
-				error_dialog.setWindowTitle("Error")
-				error_dialog.setText(f"Automations for tool {log_entry.tool} are not available yet\nFollow the notes written by the author")
-				error_dialog.exec_()
-				
+			if log_entry.activity == UNPACKING_ACTIVITY:
+				self.unpack()
 			else:
-				tool = tool_module.Tool(log_entry.executable)
+				tool_module = get_tool(log_entry.tool)
 
-				if log_entry.activity == 'Open tool':
-					tool.execute(arguments=log_entry.arguments, malware=str(self.analysis.malware_sample))
+				if not tool_module:
+					error_dialog = QMessageBox(self)
+					error_dialog.setIcon(QMessageBox.Warning)
+					error_dialog.setWindowTitle("Error")
+					error_dialog.setText(f"Automations for tool {log_entry.tool} are not available yet\nFollow the notes written by the author")
+					error_dialog.exec_()
+					
+				else:
 
-				elif log_entry.activity == 'Close tool':
-					if isinstance(tool, DesktopTool):
-						tool.attach()
-						tool.close()
+					executables = self.analysis.get_executable(log_entry.tool)
+					if not executables or not any([log_entry.executable in executable for executable in executables]):
+						error_dialog = QMessageBox(self)
+						error_dialog.setIcon(QMessageBox.Critical)
+						error_dialog.setWindowTitle("Error")
+						error_dialog.setText(f"Not found valid executables for {log_entry.tool} in this system")
+						error_dialog.exec_()
+					
+					else:
+						tool = tool_module.Tool(log_entry.executable)
+
+						if log_entry.activity == 'Open tool':
+							tool.execute(arguments=log_entry.arguments, malware=str(self.analysis.malware_sample))
+
+						elif log_entry.activity == 'Close tool':
+							if isinstance(tool, DesktopTool):
+								tool.attach()
+								tool.close()
 		else:
-			if log_entry.activity == "Set malware sample":
+			if log_entry.activity == SET_MALWARE_SAMPLE_ACTIVITY:
 				if self.analysis.malware_sample != log_entry.arguments[0]:
 					self.analysis.change_malware_sample(log_entry.arguments[0])
 					self.flowchart.redraw(self.analysis.workflow.dot_code())
-
 
 		self.replay_index += 1
 
@@ -636,15 +759,23 @@ class MainWindow(QMainWindow):
 			self.analysis.update_activity_log(
 				AnalysisLogEntry(
 					"",
-					"Set malware sample",
+					SET_MALWARE_SAMPLE_ACTIVITY,
 					"",
-					[file_name,],
+					[self.analysis.malware_sample,],
 					"",
 					time()
 				)	
 			)
 
 			self.flowchart.redraw(self.analysis.workflow.dot_code())
+
+	def deleted_activity_log_entry(self, row):
+		self.analysis.delete_log_entry(row)
+
+		widgetToRemove = self.notes_stacked_widget.widget(row)
+		self.notes_stacked_widget.removeWidget(widgetToRemove)
+
+		widgetToRemove.deleteLater()
 
 	def close(self) -> bool:
 		return super().close()

@@ -11,6 +11,7 @@ class Tool(DesktopTool):
     def execute(self, *args, **kwargs):
         self.run()
         self.load_sample_from_gui(kwargs['malware'])
+        return self.get_packer()
 
     def get_packer(self):
         packer_box = self.library.get_elements('type:Edit name:"File:"')[1]

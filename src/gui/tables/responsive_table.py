@@ -1,10 +1,10 @@
-import typing
-from PyQt6 import QtGui
-from PyQt6.QtWidgets import QTableWidget, QSizePolicy
-from PyQt6.QtGui import QPainter, QPen, QPainterPath
-from PyQt6.QtCore import Qt, QPointF
+from PyQt6.QtWidgets import QTableWidget, QSizePolicy, QMenu
+from PyQt6.QtGui import QAction
+from PyQt6.QtCore import Qt, pyqtSignal
 
 class ResponsiveTableWidget(QTableWidget):
+	deletedRow = pyqtSignal(int)
+	
 	def __init__(self, rows, headers: list[str], parent=None):
 		super(ResponsiveTableWidget, self).__init__(rows, len(headers), parent)
 		self.setHorizontalHeaderLabels(headers)
@@ -49,6 +49,26 @@ class ResponsiveTableWidget(QTableWidget):
 	
 	def defaultSortingEnabled(self):
 		return self.sorting_enabled
+
+	def contextMenuEvent(self, event):
+		context_menu = QMenu(self)
+
+		# Get the selected row
+		selected_row = self.currentRow()
+
+		# Create actions for the context menu
+		delete_row_action = QAction("Delete Row", self)
+		delete_row_action.triggered.connect(lambda: self.deleteRow(selected_row))
+
+		# Add actions to the context menu
+		context_menu.addAction(delete_row_action)
+
+		# Show the context menu at the cursor position
+		context_menu.exec_(event.globalPos())
+
+	def deleteRow(self, row):
+		self.removeRow(row)
+		self.deletedRow.emit(row)
 
 	def sort_rows(self, logical_index):
 		

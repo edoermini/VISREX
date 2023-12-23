@@ -5,18 +5,24 @@ sys.path.append('..')
 from PyQt6.QtWidgets import QApplication, QDialog
 from PyQt6.QtGui import QIcon
 from gui.windows import MainWindow
-from gui.dialogs import MainDialog, ChoseFileDialog
+from gui.dialogs import MainDialog, ChoseFileDialog, ChangePathsDialog
+from gui.utils import is_dark_theme_active
+from analysis import Analysis
+
+from constants import SET_MALWARE_SAMPLE_ACTIVITY
+import pathlib
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     malware_sample = None
-    analysis_file = None
+    analysis = None
+    analysis_file = ""
     
     main_dialog = MainDialog()
     main_dialog.setWindowIcon(QIcon('gui/assets/app_icon.png'))
 
-    while malware_sample is None and analysis_file is None:
+    while malware_sample is None and analysis is None:
         result = main_dialog.exec_()
         
         if result == QDialog.Accepted:
@@ -36,11 +42,29 @@ if __name__ == '__main__':
 
                 if result == QDialog.Accepted and open_analysis_dialog.file_name != "":
                     analysis_file = open_analysis_dialog.file_name
+                    
+                    analysis = Analysis.import_analysis(analysis_file)
+                    paths = [entry.arguments[0] for entry in analysis.get_activity_log() if entry.activity == "Set malware sample"]
+
+                    change_path_dialog = ChangePathsDialog(paths, is_dark_theme_active(open_analysis_dialog))
+                    result = change_path_dialog.exec_()
+
+                    if result == QDialog.Accepted:
+                        path_index = 0
+                        new_paths = change_path_dialog.getPaths()
+
+                        for index, entry in enumerate(analysis.get_activity_log()):
+                            if entry.activity == SET_MALWARE_SAMPLE_ACTIVITY:
+                                entry.arguments = [str(pathlib.Path(new_paths[path_index]))]
+                                analysis.update_log_entry(index, entry)
+                                path_index += 1
+                    else:
+                        analysis = None
         else:
             break
 
-    if malware_sample or analysis_file:
-        main_window = MainWindow(malware_sample=malware_sample, analysis_file=analysis_file)
+    if malware_sample or analysis:
+        main_window = MainWindow(malware_sample=malware_sample, analysis=analysis, analysis_file=analysis_file)
         main_window.setWindowIcon(QIcon('gui/assets/app_icon.png'))
         main_window.show()
 

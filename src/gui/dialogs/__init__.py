@@ -7,3 +7,5 @@ from .loading_dialog import LoadingDialog
 from .tools_coverage_dialog import ToolsCoverageDialog
 from .iat_reconstruction_dialog import IATReconstructionDialog
 from .text_box_dialog import TextBoxDialog
+from .packer_detection_result_dialog import PackerDetectionResultDialog
+from .change_paths_dialog import ChangePathsDialog

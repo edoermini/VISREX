@@ -8,49 +8,58 @@ class Workflow:
 			"nodes": {
 			  "start": {
 				"type": "activity",
-				"name": "Malware sample" if not malware_executable else malware_executable,
+				"name": "Start",
 				"description": "",
 				"phase": "",
 				"color": "",
 				"results": [],
 				"tools": []
 			  },
-			#   "extr_0": {
-			# 	"type": "decision",
-			# 	"name": "Hidden from WinAPI",
-			# 	"description": "",
-			# 	"phase": "extraction",
-			# 	"color": "#4051B5",
-			# 	"results": [],
-			# 	"tools": []
-			#   },
-			#   "extr_1": {
-			# 	"type": "activity",
-			# 	"name": "Automatic Extraction",
-			# 	"description": "",
-			# 	"phase": "extraction",
-			# 	"color": "#4051B5",
-			# 	"results": [],
-			# 	"tools": []
-			#   },
-			#   "extr_2": {
-			# 	"type": "activity",
-			# 	"name": "Manual Extraction",
-			# 	"description": "",
-			# 	"phase": "extraction",
-			# 	"color": "#4051B5",
-			# 	"results": [],
-			# 	"tools": []
-			#   },
-			#   "extr_3": {
-			# 	"type": "activity",
-			# 	"name": "Extract from archive",
-			# 	"description": "",
-			# 	"phase": "extraction",
-			# 	"color": "#4051B5",
-			# 	"results": [],
-			# 	"tools": []
-			#   },
+			  "extr_0": {
+				"type": "decision",
+				"name": "Malware Specimen Hidden?",
+				"description": "",
+				"phase": "extraction",
+				"color": "#4051B5",
+				"results": [],
+				"tools": []
+			  },
+			  "extr_1": {
+				"type": "activity",
+				"name": "Automatic Extraction",
+				"description": "",
+				"phase": "extraction",
+				"color": "#4051B5",
+				"results": [],
+				"tools": []
+			  },
+			  "extr_2": {
+				"type": "decision",
+				"name": "Has it Been Extracted?",
+				"description": "",
+				"phase": "extraction",
+				"color": "#4051B5",
+				"results": [],
+				"tools": []
+			  },
+			  "extr_3": {
+				"type": "activity",
+				"name": "Manual Extraction",
+				"description": "",
+				"phase": "extraction",
+				"color": "#4051B5",
+				"results": [],
+				"tools": []
+			  },
+			  "extr_4": {
+				"type": "activity",
+				"name": "Extract from archive",
+				"description": "",
+				"phase": "extraction",
+				"color": "#4051B5",
+				"results": [],
+				"tools": []
+			  },
 			  "exan_0": {
 				"type": "activity",
 				"name": "Identify the hash",
@@ -150,13 +159,7 @@ class Workflow:
 				"phase": "Unpacking",
 				"color":"#2CD551",
 				"results": [],
-				"tools": [
-				  "pebrowse",
-				  "winhex",
-				  "peexplorer",
-				  "procdump32",
-				  "upx"
-				]
+				"tools": []
 			  },
 			  "unpk_3": {
 				"type": "activity",
@@ -484,39 +487,44 @@ class Workflow:
 			"edges": [
 			  {
 				"source": "start",
+				"destination": "extr_0",
+				"value": ""
+			  },
+			  {
+				"source": "extr_0",
+				"destination": "extr_1",
+				"value": "Yes"
+			  },
+			  {
+				"source": "extr_0",
+				"destination": "bhvr_0",
+				"value": "No"
+			  },
+			  {
+				"source": "extr_1",
+				"destination": "extr_2",
+				"value": ""
+			  },
+			  {
+				"source": "extr_2",
+				"destination": "extr_3",
+				"value": "No"
+			  },
+			  {
+				"source": "extr_2",
+				"destination": "extr_4",
+				"value": "Yes"
+			  },
+			  {
+				"source": "extr_3",
+				"destination": "extr_4",
+				"value": ""
+			  },
+			  {
+				"source": "extr_4",
 				"destination": "bhvr_0",
 				"value": ""
 			  },
-			#   {
-			# 	"source": "start",
-			# 	"destination": "extr_0",
-			# 	"value": ""
-			#   },
-			#   {
-			# 	"source": "extr_0",
-			# 	"destination": "extr_1",
-			# 	"value": "Yes"
-			#   },
-			#   {
-			# 	"source": "extr_0",
-			# 	"destination": "extr_2",
-			# 	"value": "No"
-			#   },
-			#   {
-			# 	"source": "extr_1",
-			# 	"destination": "extr_3",
-			# 	"value": ""
-			#   },
-			#   {
-			# 	"source": "extr_2",
-			# 	"destination": "extr_3",
-			# 	"value": ""
-			#   },
-			#   {
-			# 	"source": "extr_3",
-			# 	"destination": "exan_0",
-			# 	"value": ""
-			#   },
 			  {
 				"source": "bhvr_0",
 				"destination": "bhvr_1",
