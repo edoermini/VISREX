@@ -64,6 +64,10 @@ class CLITool(ABC):
 
         return stdout.decode('utf-8'), stderr.decode('utf-8'), process.returncode
     
+    @abstractmethod
+    def execute(self, *args, **kwargs):
+        pass
+    
     def get_output(self) -> str:
         return self.stdout
 

@@ -57,7 +57,7 @@ class MainWindow(QMainWindow):
 		self.setTheme('auto')
 
 	def initUI(self):
-		self.setWindowTitle("MASup (Malware Analysis Supporter)")
+		self.setWindowTitle("VISREX")
 
 		# Creare un widget a pila per le diverse viste
 		stacked_widget = QStackedWidget()

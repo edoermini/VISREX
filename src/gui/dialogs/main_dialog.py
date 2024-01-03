@@ -15,7 +15,7 @@ class MainDialog(QDialog):
         self.open_analysis = False
 
     def initUI(self):
-        self.setWindowTitle('Masup')
+        self.setWindowTitle('VISREX')
 
         new_analysis_layout = QHBoxLayout()
 
