@@ -24,7 +24,8 @@ jobs:
         pip install -r requirements.txt  # Replace with your requirements file if you have one
 
     - name: Build Executable
-      run: pyinstaller.exe --onefile --name VISREX --icon=C:\Users\user\Documents\VISREX\src\gui\assets\app_icon.ico --noconsole --hidden-import=psutil --hidden-import=pkgutil --hidden-import=PyQt6.sip --hidden-import=PyQt6.QtCore --hidden-import=PyQt6.QtWidgets --hidden-import=qtawesome --hidden-import=qdarktheme --hidden-import=graphviz --hidden-import=pygetwindow --hidden-import=pyautogui --hidden-import=pymem --hidden-import=markdown --hidden-import=RPA --hidden-import=RPA.Windows --add-data "gui\assets\*:gui\assets\" --add-data "resources_rc.py;." .\main.py   # Replace with your actual script name
+      working-directory: ./src
+      run: pyinstaller.exe --onefile --name VISREX --icon=C:\Users\user\Documents\VISREX\src\gui\assets\app_icon.ico --noconsole --hidden-import=psutil --hidden-import=pkgutil --hidden-import=PyQt6.sip --hidden-import=PyQt6.QtCore --hidden-import=PyQt6.QtWidgets --hidden-import=qtawesome --hidden-import=qdarktheme --hidden-import=graphviz --hidden-import=pygetwindow --hidden-import=pyautogui --hidden-import=pymem --hidden-import=markdown --hidden-import=RPA --hidden-import=RPA.Windows --add-data "gui\assets\*:gui\assets\" --add-data "resources_rc.py;." .\main.py
 
     - name: Archive Executable
       uses: actions/upload-artifact@v2
