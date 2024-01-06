@@ -192,10 +192,6 @@ class MainWindow(QMainWindow):
 		save_with_name_action.triggered.connect(self.saveWithName)
 		file_menu.addAction(save_with_name_action)
 
-		load_action = QAction('Open analysis', self)
-		load_action.triggered.connect(self.openFile)
-		file_menu.addAction(load_action)
-
 		file_menu.addSeparator()
 
 		export_flowchat_svg_action = QAction('Export Flowchart SVG', self)
@@ -390,17 +386,6 @@ class MainWindow(QMainWindow):
 		if file_path:
 			self.analysis_file = file_path
 			self.analysis.export_analysis(self.analysis_file)
-
-	def openFile(self):
-		file_path, _ = QFileDialog.getOpenFileName(self, "Load Object", "", "JSON Files (*.json)")
-		if file_path:
-			analysis = Analysis.import_analysis(file_path)
-			success = self.update_malware_paths(analysis)
-			
-			if success:
-				self.analysis_file = file_path
-				self.analysis = analysis
-				self.flowchart.redraw(self.analysis.workflow.dot_code())
 	
 	def readProcessMemory(self):
 		read_process_memory = ReadProcessMemoryDialog(self)
