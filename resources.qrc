@@ -1,0 +1,7 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+  <qresource>
+    <file>gui/assets/app_icon.png</file>
+    <file>gui/assets/loading.gif</file>
+  </qresource>
+</RCC>

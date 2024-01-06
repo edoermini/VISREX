@@ -35,7 +35,8 @@ class Analysis:
 		# stores for each running tool the executable and the arguments
 		self.running_tools_info : dict[str, OrderedDict[str, Any]] = {}
 
-		# locks both self.activity_log and self.executables resources
+		# locks self.activities, self.activity_log and self.executables resources
+		self.activities_lock = Lock()
 		self.activity_log_lock = Lock()
 		self.executables_lock = Lock()
 	
@@ -116,18 +117,20 @@ class Analysis:
 			if any(tool in self.active_tools for tool in node['tools']):
 				updated_activities.add(node_id)
 
-				if node_id not in self.activities:
-					self.activities[node_id] = {
-						'start_time': current_time,
-						'active': True,
-					}
+				with self.activities_lock:
+					if node_id not in self.activities:
+						self.activities[node_id] = {
+							'start_time': current_time,
+							'active': True,
+						}
 
-		for node_id, activity in list(self.activities.items()):
-			if activity['active'] and node_id not in updated_activities:
-				activity.update({
-					'active': False,
-					'stop_time': current_time - activity['start_time']
-				})
+		with self.activities_lock:
+			for node_id, activity in list(self.activities.items()):
+				if activity['active'] and node_id not in updated_activities:
+					activity.update({
+						'active': False,
+						'stop_time': current_time
+					})
 
 	def update(self):
 		current_time = time()
@@ -239,4 +242,28 @@ class Analysis:
 	def delete_log_entry(self, index:int):
 		with self.activity_log_lock:
 			self.activity_log.pop(index)
+	
+	def update_activity(self, node_id:str, active:bool):
+		
+		with self.activities_lock:
+			if active:
+				# activity started
+				if node_id not in self.activities:
+					self.activities[node_id] = {
+						'start_time': time(),
+						'active': True,
+					}
 			
+				else:
+					if not self.activities[node_id]['active']:
+						self.activities[node_id].update({
+							'active': True,
+							'start_time': time()
+						})
+			else:
+				# activity stopped
+				if self.activities[node_id]['active']:
+					self.activities[node_id].update({
+						'active': False,
+						'stop_time': time()
+					})

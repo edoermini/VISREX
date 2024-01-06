@@ -1,11 +1,9 @@
 from PyQt6.QtWidgets import QMenu, QStatusBar, QToolBar, QMainWindow, QVBoxLayout, QWidget, QStackedWidget, QTableWidgetItem, QFileDialog, QDialog, QLabel, QSplitter, QTableWidget, QMessageBox
 from PyQt6.QtCore import Qt, QSize, QTimer, QThread
-from PyQt6 import QtCore
 from PyQt6.QtGui import QMovie, QAction, QActionGroup, QColor
 import qtawesome as qta
 import qdarktheme
 import os
-import pickle
 from time import time
 from functools import partial
 import subprocess
@@ -23,6 +21,8 @@ from gui.utils import is_dark_theme_active
 from analysis import Analysis, AnalysisLogEntry
 from integrations.importer import get_tool
 from integrations.generics import DesktopTool
+
+import resources_rc
 
 from constants import SET_MALWARE_SAMPLE_ACTIVITY, UNPACKING_ACTIVITY, READ_PROCESS_MEMORY_ACTIVITY
 
@@ -164,15 +164,15 @@ class MainWindow(QMainWindow):
 
 		self.toolbar.addSeparator()
 
-		self.read_process_memory_button = QAction(qta.icon("fa5s.syringe", color="white" if is_dark_theme_active(self) else "black"), "Read process memory", self)
-		self.read_process_memory_button.triggered.connect(self.readProcessMemory)
-		self.read_process_memory_button.setCheckable(False)
-		self.toolbar.addAction(self.read_process_memory_button)
+		#self.read_process_memory_button = QAction(qta.icon("fa5s.syringe", color="white" if is_dark_theme_active(self) else "black"), "Read process memory", self)
+		#self.read_process_memory_button.triggered.connect(self.readProcessMemory)
+		#self.read_process_memory_button.setCheckable(False)
+		#self.toolbar.addAction(self.read_process_memory_button)
 
-		self.iat_reconstruction_button = QAction(qta.icon("fa5s.wrench", color="white" if is_dark_theme_active(self) else "black"), "Reconstruct IAT", self)
-		self.iat_reconstruction_button.triggered.connect(self.iatReconstruct)
-		self.iat_reconstruction_button.setCheckable(False)
-		self.toolbar.addAction(self.iat_reconstruction_button)
+		#self.iat_reconstruction_button = QAction(qta.icon("fa5s.wrench", color="white" if is_dark_theme_active(self) else "black"), "Reconstruct IAT", self)
+		#self.iat_reconstruction_button.triggered.connect(self.iatReconstruct)
+		#self.iat_reconstruction_button.setCheckable(False)
+		#self.toolbar.addAction(self.iat_reconstruction_button)
 
 		self.unpacking_button = QAction(qta.icon("fa5s.box-open", color="white" if is_dark_theme_active(self) else "black"), "Unpack", self)
 		self.unpacking_button.triggered.connect(lambda: self.unpack(update_log=True))
@@ -263,7 +263,7 @@ class MainWindow(QMainWindow):
 
 		self.spinner_label = QLabel(self)
 		self.spinner_label.setFixedSize(25, 25)
-		self.spinner_movie = QMovie(os.path.abspath("gui/assets/loading.gif"))
+		self.spinner_movie = QMovie(":/gui/assets/loading.gif")
 		self.spinner_movie.setScaledSize(QSize(20, 20))
 		self.spinner_label.setMovie(self.spinner_movie)
 		self.spinner_movie.start()
@@ -486,8 +486,12 @@ class MainWindow(QMainWindow):
 		if not (chose_tool_dialog_result == QDialog.Accepted and executable_dialog_result == QDialog.Accepted):
 			return
 		
+		self.analysis.update_activity('unpk_0', True)
+		
 		packer = tool.execute(malware=self.analysis.malware_sample)
 		tool.close()
+
+		self.analysis.update_activity('unpk_0', False)
 
 		if 'UPX' in packer:
 			packer_detection_result_dialog = PackerDetectionResultDialog(True, packer)
@@ -501,8 +505,13 @@ class MainWindow(QMainWindow):
 					tool_module = get_tool('upx')
 					tool = tool_module.Tool(executable_dialog.getSelected())
 					unpacked_name = os.path.join(os.path.dirname(self.analysis.malware_sample), f"unpacked_{os.path.basename(self.analysis.malware_sample)}")
+					
+					self.analysis.update_activity('unpk_3', True)
+
 					unpacked = tool.execute(malware=self.analysis.malware_sample, output=unpacked_name)
 					
+					self.analysis.update_activity('unpk_3', False)
+
 					unpacked_dialog = QMessageBox(self)
 					
 					if unpacked:
@@ -547,9 +556,9 @@ class MainWindow(QMainWindow):
 
 		self.flowchart.setEdgesColor(QColor(Qt.white) if dark_mode else QColor(Qt.black))
 		self.progress_page_button.setIcon(qta.icon("fa5s.project-diagram", color="white" if dark_mode else "black"))
-		self.iat_reconstruction_button.setIcon(qta.icon("fa5s.wrench", color="white" if dark_mode else "black"))
+		#self.iat_reconstruction_button.setIcon(qta.icon("fa5s.wrench", color="white" if dark_mode else "black"))
 		self.activity_log_page_button.setIcon(qta.icon("fa5s.history", color="white" if dark_mode else "black"))
-		self.read_process_memory_button.setIcon(qta.icon("fa5s.syringe", color="white" if dark_mode else "black"))
+		#self.read_process_memory_button.setIcon(qta.icon("fa5s.syringe", color="white" if dark_mode else "black"))
 		self.unpacking_button.setIcon(qta.icon("fa5s.box-open", color="white" if is_dark_theme_active(self) else "black"))
 		self.play_action.setIcon(qta.icon("fa5s.play", color="white" if dark_mode else "black"))
 		self.stop_action.setIcon(qta.icon("fa5s.stop", color="white" if dark_mode else "black"))
