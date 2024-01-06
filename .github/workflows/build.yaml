@@ -28,7 +28,6 @@ jobs:
       run: pyinstaller.exe --onefile --name VISREX --icon=gui\assets\app_icon.ico --noconsole --hidden-import=psutil --hidden-import=pkgutil --hidden-import=PyQt6.sip --hidden-import=PyQt6.QtCore --hidden-import=PyQt6.QtWidgets --hidden-import=qtawesome --hidden-import=qdarktheme --hidden-import=graphviz --hidden-import=pygetwindow --hidden-import=pyautogui --hidden-import=pymem --hidden-import=markdown --hidden-import=RPA --hidden-import=RPA.Windows --add-data "gui\assets\*:gui\assets\" --add-data "resources_rc.py;." .\main.py
 
     - name: Archive Executable
-      working-directory: ./src
       uses: actions/upload-artifact@v2
       with:
         name: VISREX
