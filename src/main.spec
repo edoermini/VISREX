@@ -54,5 +54,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['C:\\Users\\user\\Documents\\VISREX\\src\\gui\\assets\\app_icon.ico'],
+    icon=['gui\\assets\\app_icon.ico'],
 )
