@@ -275,6 +275,8 @@ class MainWindow(QMainWindow):
 		self.activity_updater.dataUpdated.connect(self.updateAnalysisProgress)
 		self.activity_updater.start()
 		
+		self.executables_finder_thread = ExecutablesUpdater(self.analysis)
+		self.executables_finder_thread.executableFound.connect(self.updateToolsCoverage)
 		self.executablesFinderStart()
 	
 	def update_malware_paths(self, analysis:Analysis):
@@ -353,14 +355,13 @@ class MainWindow(QMainWindow):
 
 	def executablesFinderStart(self):
 		message_index = self.messages.add('Looking for executables')
-		executables_finder_thread = ExecutablesUpdater(self.analysis)
-		executables_finder_thread.executableFound.connect(self.updateToolsCoverage)
-		executables_finder_thread.finished.connect(partial(self.executablesFinderFinish, message_index, executables_finder_thread))
-		executables_finder_thread.start()
+		self.executables_finder_thread.finished.connect(partial(self.executablesFinderFinish, message_index))
+		self.executables_finder_thread.start()
 
-	def executablesFinderFinish(self, message_index:int, thread:QThread):
+	def executablesFinderFinish(self, message_index:int):
 		self.messages.remove(message_index)
-		thread.terminate()
+		self.executables_finder_thread.finished.disconnect()
+		self.executables_finder_thread.terminate()
 
 	def updateToolsCoverage(self):
 		nodes_ids = self.analysis.workflow.get_nodes_ids()
