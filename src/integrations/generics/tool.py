@@ -63,12 +63,3 @@ class CLITool(ABC):
         stdout, stderr = process.communicate()
 
         return stdout.decode('utf-8'), stderr.decode('utf-8'), process.returncode
-    
-    def get_output(self) -> str:
-        return self.stdout
-
-    def get_error(self) -> str:
-        return self.stderr
-
-    def close(self):
-        self.process.kill()
