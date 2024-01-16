@@ -48,6 +48,7 @@ if __name__ == '__main__':
                     paths = [entry.arguments[0] for entry in analysis.get_activity_log() if entry.activity == "Set malware sample"]
 
                     change_path_dialog = ChangePathsDialog(paths, is_dark_theme_active(open_analysis_dialog))
+                    change_path_dialog.setWindowIcon(QIcon(':/gui/assets/app_icon.png'))
                     result = change_path_dialog.exec_()
 
                     if result == QDialog.Accepted:
