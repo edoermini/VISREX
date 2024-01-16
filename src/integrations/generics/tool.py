@@ -58,6 +58,10 @@ class CLITool(ABC):
     def __init__(self, path:str):
         self.path = path
 
+    @abstractmethod
+    def execute(self, *args, **kwargs):
+        pass
+    
     def _run(self, args):
         process = subprocess.Popen([self.path] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()

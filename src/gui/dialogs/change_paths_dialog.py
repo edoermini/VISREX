@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QHBoxLayout, QPushButton, QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QLineEdit, QDialog, QVBoxLayout, QLabel, QHBoxLayout, QPushButton, QFileDialog, QMessageBox
 import qtawesome as qta
 import os
 import pathlib
@@ -17,10 +17,11 @@ class ChangePathsDialog(QDialog):
 
         layout = QVBoxLayout()
 
-        layout.addWidget(QLabel("Change to the directory that should contain all these malware samples on your computer"))
+        layout.addWidget(QLabel("Change to the directory that should contain at least the first malware samples loaded"))
 
         for path in self.paths:
-            path_label = QLabel(os.path.basename(str(pathlib.Path(path))))
+            path_label = QLineEdit(os.path.basename(str(pathlib.Path(path))))
+            path_label.setReadOnly(True)
             layout.addWidget(path_label)
             self.path_labels.append(path_label)
         

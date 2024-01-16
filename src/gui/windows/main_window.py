@@ -690,6 +690,7 @@ class MainWindow(QMainWindow):
 				else:
 
 					executables = self.analysis.get_executable(log_entry.tool)
+					print(executables)
 					if not executables or not any([log_entry.executable in executable for executable in executables]):
 						error_dialog = QMessageBox(self)
 						error_dialog.setIcon(QMessageBox.Critical)
@@ -698,15 +699,30 @@ class MainWindow(QMainWindow):
 						error_dialog.exec_()
 					
 					else:
-						tool = tool_module.Tool(log_entry.executable)
 
-						if log_entry.activity == 'Open tool':
-							tool.execute(arguments=log_entry.arguments, malware=str(self.analysis.malware_sample))
+						select_executable_dialog = ComboBoxDialog("Select executable", executables)
+						select_executable_dialog_result = select_executable_dialog.exec_()
+						
+						if select_executable_dialog_result == QDialog.Accepted:
 
-						elif log_entry.activity == 'Close tool':
-							if isinstance(tool, DesktopTool):
-								tool.attach()
-								tool.close()
+							executable = select_executable_dialog.getSelected()
+
+							tool = tool_module.Tool(executable)
+
+							if log_entry.activity == 'Open tool':
+								tool.execute(arguments=log_entry.arguments, malware=str(self.analysis.malware_sample))
+
+							elif log_entry.activity == 'Close tool':
+								if isinstance(tool, DesktopTool):
+									try:
+										tool.attach()
+										tool.close()
+									except Exception as msg:
+										error_dialog = QMessageBox(self)
+										error_dialog.setIcon(QMessageBox.Critical)
+										error_dialog.setWindowTitle("Error")
+										error_dialog.setText(f"Could not find any {log_entry.tool} window")
+										error_dialog.exec_()
 		else:
 			if log_entry.activity == SET_MALWARE_SAMPLE_ACTIVITY:
 				if self.analysis.malware_sample != log_entry.arguments[0]:
