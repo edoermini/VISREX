@@ -73,11 +73,6 @@ Add a file structure here with the basic details about files, below is an exampl
     │   ├── analysis_log_entry.py
     │   ├── analysis.py
     │   ├── __init__.py
-    │   ├── __pycache__
-    │   │   ├── analysis.cpython-311.pyc
-    │   │   ├── analysis_log_entry.cpython-311.pyc
-    │   │   ├── __init__.cpython-311.pyc
-    │   │   └── workflow.cpython-311.pyc
     │   └── workflow.py
     ├── constants.py
     ├── gui
@@ -95,30 +90,6 @@ Add a file structure here with the basic details about files, below is an exampl
     │   │   ├── loading_dialog.py
     │   │   ├── main_dialog.py
     │   │   ├── packer_detection_result_dialog.py
-    │   │   ├── __pycache__
-    │   │   │   ├── change_paths_dialog.cpython-311.pyc
-    │   │   │   ├── chose_file.cpython-311.pyc
-    │   │   │   ├── chose_file_dialog.cpython-311.pyc
-    │   │   │   ├── combo_box_dialog.cpython-311.pyc
-    │   │   │   ├── extract_injected_dialog.cpython-311.pyc
-    │   │   │   ├── find_executable_task.cpython-311.pyc
-    │   │   │   ├── hex_viewer.cpython-311.pyc
-    │   │   │   ├── hex_viewer_dialog.cpython-311.pyc
-    │   │   │   ├── iat_reconstruction_dialog.cpython-311.pyc
-    │   │   │   ├── __init__.cpython-311.pyc
-    │   │   │   ├── loading_dialog.cpython-311.pyc
-    │   │   │   ├── main.cpython-311.pyc
-    │   │   │   ├── main_dialog.cpython-311.pyc
-    │   │   │   ├── new_analysis.cpython-311.pyc
-    │   │   │   ├── open.cpython-311.pyc
-    │   │   │   ├── open_dialog.cpython-311.pyc
-    │   │   │   ├── open_tool.cpython-311.pyc
-    │   │   │   ├── open_tool_dialog.cpython-311.pyc
-    │   │   │   ├── packer_detection_result_dialog.cpython-311.pyc
-    │   │   │   ├── read_process_memory.cpython-311.pyc
-    │   │   │   ├── read_process_memory_dialog.cpython-311.pyc
-    │   │   │   ├── text_box_dialog.cpython-311.pyc
-    │   │   │   └── tools_coverage_dialog.cpython-311.pyc
     │   │   ├── read_process_memory_dialog.py
     │   │   ├── text_box_dialog.py
     │   │   └── tools_coverage_dialog.py
@@ -126,82 +97,38 @@ Add a file structure here with the basic details about files, below is an exampl
     │   │   ├── graphviz_flowchart_items.py
     │   │   ├── graphviz_flowchart.py
     │   │   ├── __init__.py
-    │   │   ├── __pycache__
-    │   │   │   ├── flowchart_items.cpython-311.pyc
-    │   │   │   ├── graphviz_flowchart.cpython-311.pyc
-    │   │   │   ├── graphviz_flowchart_items.cpython-311.pyc
-    │   │   │   ├── graphviz_zoomable_flowchart.cpython-311.pyc
-    │   │   │   ├── __init__.cpython-311.pyc
-    │   │   │   ├── signals.cpython-311.pyc
-    │   │   │   └── zoomable_flowchart.cpython-311.pyc
     │   │   └── signals.py
     │   ├── __init__.py
-    │   ├── __pycache__
-    │   │   └── __init__.cpython-311.pyc
     │   ├── shared
     │   │   ├── __init__.py
-    │   │   ├── __pycache__
-    │   │   │   ├── __init__.cpython-311.pyc
-    │   │   │   └── status_message_queue.cpython-311.pyc
     │   │   └── status_message_queue.py
     │   ├── tables
     │   │   ├── __init__.py
-    │   │   ├── __pycache__
-    │   │   │   ├── __init__.cpython-311.pyc
-    │   │   │   ├── responsive_table.cpython-311.pyc
-    │   │   │   └── responsive_table_widget.cpython-311.pyc
     │   │   └── responsive_table.py
     │   ├── updaters
     │   │   ├── activity_updater.py
     │   │   ├── dialog_form_updater.py
     │   │   ├── executables_updater.py
     │   │   ├── __init__.py
-    │   │   └── __pycache__
-    │   │       ├── activity_updater.cpython-311.pyc
-    │   │       ├── dialog_form_updater.cpython-311.pyc
-    │   │       ├── executables_updater.cpython-311.pyc
-    │   │       ├── __init__.cpython-311.pyc
-    │   │       └── updaters.cpython-311.pyc
     │   ├── utils
     │   │   ├── colors.py
     │   │   ├── __init__.py
     │   │   ├── listeners.py
-    │   │   └── __pycache__
-    │   │       ├── colors.cpython-311.pyc
-    │   │       ├── dark_theme.cpython-311.pyc
-    │   │       └── __init__.cpython-311.pyc
     │   ├── widgets
     │   │   ├── __init__.py
     │   │   ├── markdown_edit.py
-    │   │   └── __pycache__
-    │   │       ├── __init__.cpython-311.pyc
-    │   │       └── markdown_edit.cpython-311.pyc
     │   └── windows
     │       ├── __init__.py
-    │       ├── main_window.py
-    │       └── __pycache__
-    │           ├── __init__.cpython-311.pyc
-    │           ├── main.cpython-311.pyc
-    │           ├── main_window.cpython-311.pyc
-    │           └── new_analysis.cpython-311.pyc
+    │       └── main_window.py
     ├── integrations
     │   ├── generics
     │   │   ├── __init__.py
-    │   │   ├── __pycache__
-    │   │   │   ├── __init__.cpython-311.pyc
-    │   │   │   └── tool.cpython-311.pyc
     │   │   └── tool.py
     │   ├── importer.py
     │   ├── __init__.py
     │   ├── modules
     │   │   ├── __init__.py
-    │   │   ├── processes.py
-    │   │   └── __pycache__
-    │   │       ├── __init__.cpython-311.pyc
-    │   │       └── processes.cpython-311.pyc
-    │   ├── __pycache__
-    │   │   ├── importer.cpython-311.pyc
-    │   │   └── __init__.cpython-311.pyc
+    │   │   └── processes.py
     │   ├── scripts
     │   │   └── debug.py
     │   └── tools
@@ -209,18 +136,10 @@ Add a file structure here with the basic details about files, below is an exampl
     │       ├── __init__.py
     │       ├── peid.py
     │       ├── pestudio.py
-    │       ├── __pycache__
-    │       │   ├── die.cpython-311.pyc
-    │       │   ├── __init__.cpython-311.pyc
-    │       │   ├── peid.cpython-311.pyc
-    │       │   ├── procmon.cpython-311.pyc
-    │       │   └── upx.cpython-311.pyc
     │       ├── scylla.py
     │       └── upx.py
     ├── main.py
     ├── main.spec
-    ├── __pycache__
-    │   └── constants.cpython-311.pyc
     ├── resources.qrc
     └── resources_rc.py
 
